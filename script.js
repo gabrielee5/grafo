@@ -23,6 +23,10 @@ class SignatureCleaner {
         this.imageInput = document.getElementById('imageInput');
         this.customInstructions = document.getElementById('customInstructions');
         this.processButton = document.getElementById('processButton');
+        this.previewSection = document.getElementById('previewSection');
+        this.previewImage = document.getElementById('previewImage');
+        this.previewFileName = document.getElementById('previewFileName');
+        this.previewFileSize = document.getElementById('previewFileSize');
         this.resultsSection = document.getElementById('resultsSection');
         this.originalImage = document.getElementById('originalImage');
         this.processedImage = document.getElementById('processedImage');
@@ -90,7 +94,7 @@ class SignatureCleaner {
         }
 
         this.currentImageFile = file;
-        this.displaySelectedImage(file);
+        this.showImagePreview(file);
         this.processButton.disabled = false;
         this.uploadArea.classList.add('has-image');
         
@@ -111,12 +115,31 @@ class SignatureCleaner {
         this.showStatus('Image loaded successfully. Ready to process.', 'success');
     }
 
-    displaySelectedImage(file) {
+    showImagePreview(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
+            // Show preview section
+            this.previewSection.hidden = false;
+            
+            // Set preview image
+            this.previewImage.src = e.target.result;
+            
+            // Set file info
+            this.previewFileName.textContent = file.name;
+            this.previewFileSize.textContent = this.formatFileSize(file.size);
+            
+            // Also set original image for results section
             this.originalImage.src = e.target.result;
         };
         reader.readAsDataURL(file);
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     async processImage() {
@@ -325,6 +348,7 @@ class SignatureCleaner {
         this.imageInput.value = '';
         this.customInstructions.value = '';
         this.processButton.disabled = true;
+        this.previewSection.hidden = true;
         this.resultsSection.hidden = true;
         this.uploadArea.classList.remove('has-image');
         
