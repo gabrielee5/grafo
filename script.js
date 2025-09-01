@@ -13,7 +13,7 @@ class SignatureCleaner {
         
         // Validate configuration
         if (this.apiKey === 'YOUR_GEMINI_API_KEY_HERE' || !this.apiKey) {
-            this.showStatus('Please configure your Gemini API key in config.js', 'error');
+            this.showStatus('Configura la tua chiave API Gemini in config.js', 'error');
             this.processButton.disabled = true;
         }
     }
@@ -82,14 +82,14 @@ class SignatureCleaner {
         
         // Validate file type
         if (!this.supportedFormats.includes(file.type)) {
-            this.showStatus('Please select a valid image file (JPG, PNG, WEBP)', 'error');
+            this.showStatus('Seleziona un file immagine valido (JPG, PNG, WEBP)', 'error');
             return;
         }
 
         // Validate file size
         if (file.size > this.maxFileSize) {
             const maxSizeMB = Math.round(this.maxFileSize / (1024 * 1024));
-            this.showStatus(`Image file size must be less than ${maxSizeMB}MB`, 'error');
+            this.showStatus(`La dimensione del file immagine deve essere inferiore a ${maxSizeMB}MB`, 'error');
             return;
         }
 
@@ -112,7 +112,7 @@ class SignatureCleaner {
             <p>Click to select a different image</p>
         `;
 
-        this.showStatus('Image loaded successfully. Ready to process.', 'success');
+        this.showStatus('Immagine caricata con successo. Pronto per elaborare.', 'success');
     }
 
     showImagePreview(file) {
@@ -146,37 +146,144 @@ class SignatureCleaner {
         if (!this.currentImageFile) return;
 
         this.setProcessingState(true);
-        this.showStatus('Processing image with Gemini AI...', 'info');
 
         try {
             // Convert image to base64
             const base64Image = await this.fileToBase64(this.currentImageFile);
             const base64Data = base64Image.split(',')[1]; // Remove data:image/... prefix
 
-            // Use only user's custom instructions as the prompt
-            const userPrompt = this.customInstructions.value.trim();
+            // Get Italian user input
+            const italianInput = this.customInstructions.value.trim();
             
-            if (!userPrompt) {
-                this.showStatus('Please provide processing instructions in the text area', 'error');
+            if (!italianInput) {
+                this.showStatus('Fornire le istruzioni di elaborazione nell\'area di testo', 'error');
                 return;
             }
 
-            // Call Gemini API
-            const response = await this.callGeminiAPI(base64Data, userPrompt);
+            // Process through 3-step pipeline
+            const response = await this.processImageWithPipeline(base64Data, italianInput);
             
             if (response.success) {
                 this.displayProcessedImage(response.imageData);
                 this.showResults();
-                this.showStatus('Image processed successfully!', 'success');
+                this.showStatus('Immagine elaborata con successo!', 'success');
             } else {
                 throw new Error(response.error || 'Failed to process image');
             }
 
         } catch (error) {
             console.error('Processing error:', error);
-            this.showStatus(`Error processing image: ${error.message}`, 'error');
+            this.showStatus(`Errore nell'elaborazione dell'immagine: ${error.message}`, 'error');
         } finally {
             this.setProcessingState(false);
+        }
+    }
+
+    // 3-step pipeline: Italian → English → Enhanced → Image Processing
+    async processImageWithPipeline(base64Data, italianInput) {
+        try {
+            // Step 1: Translation
+            this.showStatus('Traduzione in corso...', 'info');
+            this.updateProcessButtonText('Traduzione...');
+            const englishText = await this.translateToEnglish(italianInput);
+            
+            // Step 2: Enhancement
+            this.showStatus('Miglioramento prompt...', 'info');
+            this.updateProcessButtonText('Miglioramento...');
+            const enhancedPrompt = await this.enhancePrompt(englishText);
+            
+            // Step 3: Image Processing
+            this.showStatus('Elaborazione immagine...', 'info');
+            this.updateProcessButtonText('Elaborazione...');
+            const response = await this.callGeminiAPI(base64Data, enhancedPrompt);
+            
+            return response;
+            
+        } catch (error) {
+            console.error('Pipeline error:', error);
+            
+            // Fallback: try direct processing with Italian text
+            console.log('Fallback: attempting direct processing');
+            this.showStatus('Fallback: elaborazione diretta...', 'info');
+            return await this.callGeminiAPI(base64Data, italianInput);
+        }
+    }
+
+    // Translation function using Gemini
+    async translateToEnglish(italianText) {
+        try {
+            const translationPrompt = `Translate this Italian text to English, preserving technical terminology related to handwriting analysis and graphology: "${italianText}"
+
+Return only the English translation, no additional text.`;
+
+            const response = await this.callGeminiTextAPI(translationPrompt);
+            return response.trim();
+            
+        } catch (error) {
+            console.error('Translation error:', error);
+            throw new Error('Errore durante la traduzione');
+        }
+    }
+
+    // Prompt enhancement function
+    async enhancePrompt(translatedText) {
+        try {
+            const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
+
+Focus on:
+- Image cleaning and noise reduction
+- Contrast and clarity improvements
+- Preservation of authentic handwriting characteristics
+- Technical specifications for signature enhancement
+
+Return only the enhanced prompt, no additional text.`;
+
+            const response = await this.callGeminiTextAPI(enhancementPrompt);
+            return response.trim();
+            
+        } catch (error) {
+            console.error('Enhancement error:', error);
+            throw new Error('Errore nel miglioramento del prompt');
+        }
+    }
+
+    // Text-only API call for translation and enhancement
+    async callGeminiTextAPI(prompt) {
+        try {
+            const requestBody = {
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            };
+
+            const response = await fetch(this.apiUrl.replace('gemini-2.5-flash-image-preview', 'gemini-2.5-flash'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': this.apiKey,
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                const textPart = data.candidates[0].content.parts.find(part => part.text);
+                if (textPart) {
+                    return textPart.text;
+                }
+            }
+            
+            throw new Error('No text response received');
+            
+        } catch (error) {
+            console.error('Text API error:', error);
+            throw error;
         }
     }
 
@@ -336,7 +443,7 @@ class SignatureCleaner {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        this.showStatus('Enhanced image downloaded successfully!', 'success');
+        this.showStatus('Immagine migliorata scaricata con successo!', 'success');
     }
 
     resetApp() {
@@ -373,13 +480,17 @@ class SignatureCleaner {
         
         if (isProcessing) {
             this.processButton.classList.add('processing');
-            this.processButton.querySelector('.button-text').textContent = 'Processing...';
+            this.processButton.querySelector('.button-text').textContent = 'Elaborazione...';
             this.processButton.querySelector('.spinner').hidden = false;
         } else {
             this.processButton.classList.remove('processing');
-            this.processButton.querySelector('.button-text').textContent = 'Process Image';
+            this.processButton.querySelector('.button-text').textContent = 'Elabora Immagine';
             this.processButton.querySelector('.spinner').hidden = true;
         }
+    }
+
+    updateProcessButtonText(text) {
+        this.processButton.querySelector('.button-text').textContent = text;
     }
 
     showStatus(message, type = 'info') {
