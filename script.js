@@ -166,8 +166,8 @@ class SignatureCleaner {
                             text: prompt
                         },
                         {
-                            inline_data: {
-                                mime_type: this.currentImageFile.type,
+                            inlineData: {
+                                mimeType: this.currentImageFile.type,
                                 data: base64Image
                             }
                         }
@@ -200,10 +200,10 @@ class SignatureCleaner {
                 
                 // Look for image data in the response parts
                 for (const part of parts) {
-                    if (part.inline_data && part.inline_data.data) {
+                    if (part.inlineData && part.inlineData.data) {
                         // Convert base64 data to blob
-                        const imageData = part.inline_data.data;
-                        const mimeType = part.inline_data.mime_type || 'image/png';
+                        const imageData = part.inlineData.data;
+                        const mimeType = part.inlineData.mimeType || 'image/png';
                         
                         const binaryData = atob(imageData);
                         const bytes = new Uint8Array(binaryData.length);
