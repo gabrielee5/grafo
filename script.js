@@ -5,6 +5,10 @@ class SignatureCleaner {
         this.currentImageFile = null;
         this.processedImageBlob = null;
         
+        // Workflow tracking
+        this.workflowSteps = [];
+        this.debugVisible = false;
+        
         // Load configuration
         this.apiKey = CONFIG.GEMINI_API_KEY;
         this.apiUrl = CONFIG.GEMINI_API_URL;
@@ -33,6 +37,9 @@ class SignatureCleaner {
         this.downloadButton = document.getElementById('downloadButton');
         this.resetButton = document.getElementById('resetButton');
         this.statusMessage = document.getElementById('statusMessage');
+        this.debugToggle = document.getElementById('debugToggle');
+        this.workflowStepsElement = document.getElementById('workflowSteps');
+        this.workflowLadder = document.getElementById('workflowLadder');
     }
 
     setupEventListeners() {
@@ -55,6 +62,9 @@ class SignatureCleaner {
         
         // Reset button
         this.resetButton.addEventListener('click', () => this.resetApp());
+        
+        // Debug toggle button
+        this.debugToggle.addEventListener('click', () => this.toggleDebugView());
     }
 
     handleDragOver(e) {
@@ -146,6 +156,7 @@ class SignatureCleaner {
         if (!this.currentImageFile) return;
 
         this.setProcessingState(true);
+        this.clearWorkflowSteps(); // Clear previous workflow steps
 
         try {
             // Convert image to base64
@@ -159,6 +170,16 @@ class SignatureCleaner {
                 this.showStatus('Fornire le istruzioni di elaborazione nell\'area di testo', 'error');
                 return;
             }
+
+            // Add initial step
+            this.addWorkflowStep({
+                title: 'Input Utente Ricevuto',
+                status: 'completed',
+                prompt: `Input originale in italiano:\n"${italianInput}"`,
+                response: 'Input validato e pronto per la traduzione',
+                startTime: new Date(),
+                endTime: new Date()
+            });
 
             // Process through 3-step pipeline
             const response = await this.processImageWithPipeline(base64Data, italianInput);
@@ -195,38 +216,103 @@ class SignatureCleaner {
             // Step 3: Image Processing
             this.showStatus('Elaborazione immagine...', 'info');
             this.updateProcessButtonText('Elaborazione...');
+            
+            const imageStep = this.addWorkflowStep({
+                title: 'Elaborazione Immagine',
+                status: 'in-progress',
+                prompt: enhancedPrompt,
+                startTime: new Date()
+            });
+            
             const response = await this.callGeminiAPI(base64Data, enhancedPrompt);
+            
+            this.updateWorkflowStep(imageStep.id, {
+                status: response.success ? 'completed' : 'failed',
+                response: response.success ? 'Immagine elaborata con successo' : response.error,
+                endTime: new Date()
+            });
             
             return response;
             
         } catch (error) {
             console.error('Pipeline error:', error);
             
+            // Add fallback step
+            const fallbackStep = this.addWorkflowStep({
+                title: 'Fallback: Elaborazione Diretta',
+                status: 'in-progress',
+                prompt: italianInput,
+                startTime: new Date()
+            });
+            
             // Fallback: try direct processing with Italian text
             console.log('Fallback: attempting direct processing');
             this.showStatus('Fallback: elaborazione diretta...', 'info');
-            return await this.callGeminiAPI(base64Data, italianInput);
+            
+            try {
+                const response = await this.callGeminiAPI(base64Data, italianInput);
+                this.updateWorkflowStep(fallbackStep.id, {
+                    status: response.success ? 'completed' : 'failed',
+                    response: response.success ? 'Elaborazione fallback riuscita' : response.error,
+                    endTime: new Date()
+                });
+                return response;
+            } catch (fallbackError) {
+                this.updateWorkflowStep(fallbackStep.id, {
+                    status: 'failed',
+                    response: `Errore fallback: ${fallbackError.message}`,
+                    endTime: new Date()
+                });
+                throw fallbackError;
+            }
         }
     }
 
     // Translation function using Gemini
     async translateToEnglish(italianText) {
+        const translationStep = this.addWorkflowStep({
+            title: 'Traduzione Italiano → Inglese',
+            status: 'in-progress',
+            startTime: new Date()
+        });
+
         try {
             const translationPrompt = `Translate this Italian text to English, preserving technical terminology related to handwriting analysis and graphology: "${italianText}"
 
 Return only the English translation, no additional text.`;
 
+            this.updateWorkflowStep(translationStep.id, { prompt: translationPrompt });
+
             const response = await this.callGeminiTextAPI(translationPrompt);
-            return response.trim();
+            const result = response.trim();
+            
+            this.updateWorkflowStep(translationStep.id, {
+                status: 'completed',
+                response: result,
+                endTime: new Date()
+            });
+
+            return result;
             
         } catch (error) {
             console.error('Translation error:', error);
+            this.updateWorkflowStep(translationStep.id, {
+                status: 'failed',
+                response: `Errore: ${error.message}`,
+                endTime: new Date()
+            });
             throw new Error('Errore durante la traduzione');
         }
     }
 
     // Prompt enhancement function
     async enhancePrompt(translatedText) {
+        const enhancementStep = this.addWorkflowStep({
+            title: 'Miglioramento Prompt Tecnico',
+            status: 'in-progress',
+            startTime: new Date()
+        });
+
         try {
             const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
 
@@ -238,11 +324,26 @@ Focus on:
 
 Return only the enhanced prompt, no additional text.`;
 
+            this.updateWorkflowStep(enhancementStep.id, { prompt: enhancementPrompt });
+
             const response = await this.callGeminiTextAPI(enhancementPrompt);
-            return response.trim();
+            const result = response.trim();
+            
+            this.updateWorkflowStep(enhancementStep.id, {
+                status: 'completed',
+                response: result,
+                endTime: new Date()
+            });
+
+            return result;
             
         } catch (error) {
             console.error('Enhancement error:', error);
+            this.updateWorkflowStep(enhancementStep.id, {
+                status: 'failed',
+                response: `Errore: ${error.message}`,
+                endTime: new Date()
+            });
             throw new Error('Errore nel miglioramento del prompt');
         }
     }
@@ -450,6 +551,7 @@ Return only the enhanced prompt, no additional text.`;
         // Reset all state
         this.currentImageFile = null;
         this.processedImageBlob = null;
+        this.clearWorkflowSteps();
         
         // Reset UI
         this.imageInput.value = '';
@@ -515,6 +617,108 @@ Return only the enhanced prompt, no additional text.`;
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    }
+
+    // Debug and workflow tracking methods
+    toggleDebugView() {
+        this.debugVisible = !this.debugVisible;
+        
+        if (this.debugVisible) {
+            this.workflowStepsElement.hidden = false;
+            this.debugToggle.textContent = 'Nascondi Processo';
+        } else {
+            this.workflowStepsElement.hidden = true;
+            this.debugToggle.textContent = 'Mostra Processo';
+        }
+    }
+
+    clearWorkflowSteps() {
+        this.workflowSteps = [];
+        this.workflowLadder.innerHTML = '';
+    }
+
+    addWorkflowStep(stepData) {
+        const step = {
+            id: this.workflowSteps.length + 1,
+            title: stepData.title,
+            status: stepData.status || 'in-progress',
+            prompt: stepData.prompt || null,
+            response: stepData.response || null,
+            startTime: stepData.startTime || new Date(),
+            endTime: stepData.endTime || null,
+            ...stepData
+        };
+        
+        this.workflowSteps.push(step);
+        this.renderWorkflowStep(step);
+        
+        return step;
+    }
+
+    updateWorkflowStep(stepId, updates) {
+        const stepIndex = this.workflowSteps.findIndex(s => s.id === stepId);
+        if (stepIndex !== -1) {
+            this.workflowSteps[stepIndex] = { ...this.workflowSteps[stepIndex], ...updates };
+            this.renderWorkflowStep(this.workflowSteps[stepIndex]);
+        }
+    }
+
+    renderWorkflowStep(step) {
+        const existingStep = document.getElementById(`workflow-step-${step.id}`);
+        if (existingStep) {
+            existingStep.remove();
+        }
+
+        const stepElement = document.createElement('div');
+        stepElement.id = `workflow-step-${step.id}`;
+        stepElement.className = 'workflow-step';
+
+        const statusClass = step.status === 'completed' ? 'completed' : 
+                           step.status === 'failed' ? 'failed' : '';
+
+        const timing = step.endTime ? 
+            `${Math.round((step.endTime - step.startTime) / 1000 * 100) / 100}s` : 
+            'In corso...';
+
+        stepElement.innerHTML = `
+            <div class="step-header">
+                <div class="step-number ${statusClass}">${step.id}</div>
+                <div class="step-title">${step.title}</div>
+                <div class="step-status">${this.getStatusText(step.status)}</div>
+            </div>
+            <div class="step-content">
+                ${step.prompt ? `
+                    <div class="step-prompt">
+                        <div class="step-prompt-label">Prompt Inviato</div>
+                        <div class="step-prompt-text">${this.escapeHtml(step.prompt)}</div>
+                    </div>
+                ` : ''}
+                ${step.response ? `
+                    <div class="step-response">
+                        <div class="step-response-label">Risposta Ricevuta</div>
+                        <div class="step-response-text">${this.escapeHtml(step.response)}</div>
+                    </div>
+                ` : ''}
+                <div class="step-timing">Tempo: ${timing}</div>
+            </div>
+        `;
+
+        this.workflowLadder.appendChild(stepElement);
+    }
+
+    getStatusText(status) {
+        const statusMap = {
+            'in-progress': 'In corso',
+            'completed': 'Completato',
+            'failed': 'Fallito'
+        };
+        return statusMap[status] || status;
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 

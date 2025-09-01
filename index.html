@@ -89,10 +89,32 @@
             </div>
 
             <div class="status-message" id="statusMessage"></div>
+            
+            <!-- Workflow Debug Section -->
+            <div class="workflow-debug-section">
+                <button id="debugToggle" class="debug-toggle-button" type="button">
+                    <svg class="debug-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                    Mostra Processo
+                </button>
+                
+                <div class="workflow-steps" id="workflowSteps" hidden>
+                    <div class="workflow-header">
+                        <h3>Processo di Elaborazione</h3>
+                        <p>Visualizza tutti i passaggi e i prompt utilizzati</p>
+                    </div>
+                    
+                    <div class="workflow-ladder" id="workflowLadder">
+                        <!-- Steps will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
         </main>
 
         <footer class="footer">
-            <p>Designed for professional graphological analysis in Italy</p>
+            <p>Sviluppato per tutti gli esperti grafologi in Italia.</p>
         </footer>
     </div>
 

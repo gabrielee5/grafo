@@ -348,6 +348,188 @@ body {
     border: 1px solid #bfdbfe;
 }
 
+/* Workflow Debug Section */
+.workflow-debug-section {
+    margin-top: 30px;
+}
+
+.debug-toggle-button {
+    padding: 10px 16px;
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+}
+
+.debug-toggle-button:hover {
+    background: #f8fafc;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.debug-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.workflow-steps {
+    margin-top: 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.workflow-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.workflow-header h3 {
+    color: #374151;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.workflow-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.workflow-ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.workflow-step {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+}
+
+.workflow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 24px;
+    bottom: -16px;
+    width: 2px;
+    height: 16px;
+    background: #e2e8f0;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.step-number.completed {
+    background: #10b981;
+}
+
+.step-number.failed {
+    background: #ef4444;
+}
+
+.step-title {
+    color: #374151;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.step-status {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-left: auto;
+}
+
+.step-content {
+    margin-left: 44px;
+}
+
+.step-prompt {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.step-prompt-label {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.step-prompt-text {
+    color: #374151;
+    font-size: 0.875rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.step-response {
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.step-response-label {
+    color: #065f46;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.step-response-text {
+    color: #047857;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.step-timing {
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    text-align: right;
+}
+
 /* Footer */
 .footer {
     text-align: center;
