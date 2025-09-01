@@ -1,29 +1,23 @@
 name = "signature-cleaner"
 main = "src/worker.js"
-compatibility_date = "2023-05-18"
+compatibility_date = "2023-10-12"
+compatibility_flags = ["nodejs_compat"]
 
-[env.production]
-kv_namespaces = [
-    { binding = "KV", id = "064faca259034a87a8efafad7e1718e5" },
-]
+# Production KV Namespace
+[[kv_namespaces]]
+binding = "KV"
+id = "064faca259034a87a8efafad7e1718e5"
 
-[[env.production.r2_buckets]]
+# Production R2 Bucket
+[[r2_buckets]]
 binding = "R2"
 bucket_name = "signature-images"
 
-[env.production.vars]
-# These will be set via wrangler secret put
-# GEMINI_API_KEY = "will-be-set-as-secret"
-# JWT_SECRET = "will-be-set-as-secret"
+# Environment Variables (non-sensitive)
+[vars]
+# Add any non-sensitive environment variables here
+# Sensitive variables like API keys should be set with: wrangler secret put
 
-[env.development]
-kv_namespaces = [
-    { binding = "KV", id = "your-dev-kv-namespace-id" },
-]
-
-[[env.development.r2_buckets]]
-binding = "R2"  
-bucket_name = "signature-images-dev"
-
-[env.development.vars]
-# Development environment variables
+# Secrets (set these with wrangler secret put):
+# GEMINI_API_KEY - Your Google Gemini API key
+# JWT_SECRET - Secret key for JWT token signing
