@@ -1,0 +1,35 @@
+{
+  "name": "signature-cleaner-production",
+  "version": "1.0.0",
+  "description": "Production-ready signature cleaning app with Cloudflare Workers backend",
+  "main": "src/worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish",
+    "deploy:production": "wrangler publish --env production",
+    "kv:create": "wrangler kv:namespace create \"SIGNATURE_KV\"",
+    "kv:create:preview": "wrangler kv:namespace create \"SIGNATURE_KV\" --preview",
+    "r2:create": "wrangler r2 bucket create signature-images",
+    "setup": "npm run kv:create && npm run r2:create",
+    "secrets:set": "echo 'Run: wrangler secret put GEMINI_API_KEY && wrangler secret put JWT_SECRET'",
+    "logs": "wrangler tail",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "signature",
+    "handwriting",
+    "graphology",
+    "image-processing",
+    "cloudflare-workers",
+    "authentication",
+    "history-tracking"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.33.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

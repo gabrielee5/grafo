@@ -1,0 +1,29 @@
+name = "signature-cleaner"
+main = "src/worker.js"
+compatibility_date = "2023-05-18"
+
+[env.production]
+kv_namespaces = [
+    { binding = "KV", id = "064faca259034a87a8efafad7e1718e5" },
+]
+
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "signature-images"
+
+[env.production.vars]
+# These will be set via wrangler secret put
+# GEMINI_API_KEY = "will-be-set-as-secret"
+# JWT_SECRET = "will-be-set-as-secret"
+
+[env.development]
+kv_namespaces = [
+    { binding = "KV", id = "your-dev-kv-namespace-id" },
+]
+
+[[env.development.r2_buckets]]
+binding = "R2"  
+bucket_name = "signature-images-dev"
+
+[env.development.vars]
+# Development environment variables

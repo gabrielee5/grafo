@@ -6,10 +6,12 @@
 .env.production.local
 
 # API Keys and secrets
-config.js
 secrets.json
 *.key
 *.pem
+
+# Wrangler files
+.wrangler/
 
 # Node modules (if using Node.js in the future)
 node_modules/

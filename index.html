@@ -3,14 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signature Cleaner - Professional Handwriting Enhancement</title>
+    <title>Signature Cleaner - Production Ready</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Authentication Container (shown when not logged in) -->
+    <div id="auth-container" class="auth-container" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Signature Cleaner</h1>
+                <p>Professional handwriting enhancement for Italian graphologists</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <h2>Accedi</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit" class="auth-button">Accedi</button>
+                <p class="auth-switch">
+                    Non hai un account? 
+                    <a href="#" id="show-register">Registrati</a>
+                </p>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form" style="display: none;">
+                <h2>Registrati</h2>
+                <div class="form-group">
+                    <label for="register-name">Nome (Opzionale)</label>
+                    <input type="text" id="register-name" name="name">
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" required minlength="8">
+                    <small>Minimo 8 caratteri</small>
+                </div>
+                <button type="submit" class="auth-button">Registrati</button>
+                <p class="auth-switch">
+                    Hai già un account? 
+                    <a href="#" id="show-login">Accedi</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="container" style="display: none;">
         <header class="header">
-            <h1>Signature Cleaner</h1>
-            <p>Professional handwriting enhancement for graphological analysis</p>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>Signature Cleaner</h1>
+                    <p>Professional handwriting enhancement for graphological analysis</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <span id="user-name" class="user-name">Utente</span>
+                        <div class="user-dropdown">
+                            <button id="view-history-btn" class="dropdown-item">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 8v4l3 3"></path>
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                Cronologia
+                            </button>
+                            <button id="logout-btn" class="dropdown-item logout">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16,17 21,12 16,7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                Esci
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main class="main-content">
@@ -113,12 +191,63 @@
             </div>
         </main>
 
+        <!-- History Panel -->
+        <div id="history-panel" class="history-panel" style="display: none;">
+            <div class="history-header">
+                <h2>Cronologia Elaborazioni</h2>
+                <button id="close-history-btn" class="close-button">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="history-filters">
+                <select id="history-status-filter" class="filter-select">
+                    <option value="">Tutti gli stati</option>
+                    <option value="completed">Completati</option>
+                    <option value="failed">Falliti</option>
+                    <option value="pending">In corso</option>
+                </select>
+                <button id="export-history-btn" class="export-button">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7,10 12,15 17,10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Esporta
+                </button>
+            </div>
+            
+            <div id="history-list" class="history-list">
+                <!-- History items will be loaded here -->
+                <div class="history-loading" id="history-loading">
+                    Caricamento cronologia...
+                </div>
+            </div>
+            
+            <div class="history-pagination">
+                <button id="history-prev-btn" class="pagination-btn" disabled>Precedente</button>
+                <span id="history-page-info" class="page-info">Pagina 1</span>
+                <button id="history-next-btn" class="pagination-btn">Successiva</button>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>Sviluppato per tutti gli esperti grafologi in Italia.</p>
         </footer>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p id="loading-message">Caricamento...</p>
+        </div>
+    </div>
+
     <script src="config.js"></script>
-    <script src="script.js"></script>
+    <script src="script-enhanced.js"></script>
 </body>
 </html>
