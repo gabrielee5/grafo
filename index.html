@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Cleaner - Professional Handwriting Enhancement</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Signature Cleaner</h1>
+            <p>Professional handwriting enhancement for graphological analysis</p>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-placeholder">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <h3>Drop your signature image here</h3>
+                        <p>or <span class="browse-link">browse to upload</span></p>
+                        <small>Supports JPG, PNG, WEBP formats</small>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+
+                <div class="instructions-section">
+                    <label for="customInstructions" class="instructions-label">
+                        Processing Instructions (Required)
+                    </label>
+                    <textarea 
+                        id="customInstructions" 
+                        class="instructions-input"
+                        placeholder="Describe exactly how you want the image processed (e.g., 'Clean and enhance this handwritten signature by removing background noise, increasing contrast, and eliminating imperfections while preserving authentic handwriting characteristics')..."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <button id="processButton" class="process-button" disabled>
+                    <span class="button-text">Process Image</span>
+                    <div class="spinner" hidden></div>
+                </button>
+            </div>
+
+            <div class="results-section" id="resultsSection" hidden>
+                <div class="image-comparison">
+                    <div class="image-container">
+                        <h3>Original</h3>
+                        <div class="image-wrapper">
+                            <img id="originalImage" alt="Original signature">
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <h3>Enhanced</h3>
+                        <div class="image-wrapper">
+                            <img id="processedImage" alt="Enhanced signature">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button id="downloadButton" class="download-button">
+                        <svg class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-15"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Enhanced Image
+                    </button>
+                    <button id="resetButton" class="reset-button">Start Over</button>
+                </div>
+            </div>
+
+            <div class="status-message" id="statusMessage"></div>
+        </main>
+
+        <footer class="footer">
+            <p>Designed for professional graphological analysis in Italy</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
