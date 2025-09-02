@@ -861,6 +861,12 @@ Return only the enhanced prompt, no additional text.`;
     setupPanListeners(imageKey) {
         const elements = this.zoomElements[imageKey];
         const state = this.zoomStates[imageKey];
+        let rafId = null;
+
+        const updateTransform = () => {
+            this.updateImageTransform(imageKey);
+            rafId = null;
+        };
 
         elements.image.addEventListener('mousedown', (e) => {
             if (state.scale <= 1) return;
@@ -872,6 +878,9 @@ Return only the enhanced prompt, no additional text.`;
             
             elements.image.style.cursor = 'grabbing';
             elements.wrapper.classList.add('active');
+            
+            // Disable transitions during dragging for smoother performance
+            elements.image.style.transition = 'none';
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -880,7 +889,10 @@ Return only the enhanced prompt, no additional text.`;
             state.translateX = e.clientX - state.startX;
             state.translateY = e.clientY - state.startY;
             
-            this.updateImageTransform(imageKey);
+            // Use requestAnimationFrame to throttle updates and reduce lag
+            if (!rafId) {
+                rafId = requestAnimationFrame(updateTransform);
+            }
         });
 
         document.addEventListener('mouseup', () => {
@@ -888,6 +900,15 @@ Return only the enhanced prompt, no additional text.`;
                 state.isDragging = false;
                 elements.image.style.cursor = state.scale > 1 ? 'grab' : 'default';
                 elements.wrapper.classList.remove('active');
+                
+                // Re-enable transitions
+                elements.image.style.transition = 'transform 0.2s ease';
+                
+                // Cancel any pending animation frame
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
             }
         });
     }
