@@ -159,7 +159,13 @@ firma-pulita/
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a **Non-Commercial License** - see the [LICENSE](LICENSE) file for details.
+
+**Key License Points:**
+- ✅ Free for personal and educational use
+- ✅ Can modify and distribute for non-commercial purposes  
+- ❌ Commercial use prohibited without separate license
+- 📧 Contact for commercial licensing inquiries
 
 ## 👨‍💻 Author
 
