@@ -17,11 +17,24 @@ class SignatureCleaner {
         this.maxFileSize = CONFIG.MAX_FILE_SIZE;
         this.supportedFormats = CONFIG.SUPPORTED_FORMATS;
         
+        // Authentication modal state
+        this.isSignUpMode = false;
+        this.appInitializing = true; // Prevent modal from showing during initialization
+        
         // Validate configuration
         if (this.apiKey === 'YOUR_GEMINI_API_KEY_HERE' || !this.apiKey) {
             this.showStatus('Configura la tua chiave API Gemini in config.js', 'error');
             this.processButton.disabled = true;
         }
+        
+        // Force hide modal immediately
+        this.forceHideModal();
+        
+        // Initialize authentication UI after a delay
+        setTimeout(() => {
+            this.initializeAuthUI();
+            this.appInitializing = false; // Allow modal interactions after initialization
+        }, 500);
     }
 
     initializeElements() {
@@ -77,6 +90,103 @@ class SignatureCleaner {
         
         // Zoom functionality
         this.setupZoomListeners();
+        
+        // Authentication event listeners
+        this.setupAuthListeners();
+    }
+    
+    setupAuthListeners() {
+        // Auth button
+        const authButton = document.getElementById('authButton');
+        if (authButton) {
+            authButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.authService && window.authService.isLoggedIn()) {
+                    this.toggleUserMenu();
+                } else {
+                    this.showAuthModal();
+                }
+            });
+        }
+        
+        // Modal controls
+        const authModal = document.getElementById('authModal');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const authForm = document.getElementById('authForm');
+        const authToggleLink = document.getElementById('authToggleLink');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        
+        if (closeModalButton) {
+            closeModalButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hideAuthModal();
+            });
+        }
+        
+        if (authModal) {
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) {
+                    this.hideAuthModal();
+                }
+            });
+        }
+        
+        // Add escape key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const authModal = document.getElementById('authModal');
+                if (authModal && !authModal.hidden) {
+                    this.hideAuthModal();
+                }
+            }
+        });
+        
+        if (authForm) {
+            authForm.addEventListener('submit', (e) => this.handleAuthSubmit(e));
+        }
+        
+        if (authToggleLink) {
+            authToggleLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleAuthMode();
+            });
+        }
+        
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleForgotPassword();
+            });
+        }
+        
+        // User menu controls
+        const historyButton = document.getElementById('historyButton');
+        const logoutButton = document.getElementById('logoutButton');
+        
+        if (historyButton) {
+            historyButton.addEventListener('click', () => this.showHistoryPanel());
+        }
+        
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => this.handleLogout());
+        }
+        
+        // History panel controls
+        const closeHistoryButton = document.getElementById('closeHistoryButton');
+        if (closeHistoryButton) {
+            closeHistoryButton.addEventListener('click', () => this.hideHistoryPanel());
+        }
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const userMenu = document.getElementById('userMenu');
+            const authButton = document.getElementById('authButton');
+            
+            if (userMenu && authButton && !userMenu.contains(e.target) && !authButton.contains(e.target)) {
+                userMenu.hidden = true;
+            }
+        });
     }
 
     handleDragOver(e) {
@@ -200,6 +310,9 @@ class SignatureCleaner {
                 this.displayProcessedImage(response.imageData);
                 this.showResults();
                 this.showStatus('Immagine elaborata con successo!', 'success');
+                
+                // Save to history
+                await this.saveToHistory(italianInput);
             } else {
                 throw new Error(response.error || 'Failed to process image');
             }
@@ -984,6 +1097,255 @@ Return only the enhanced prompt, no additional text.`;
             elements.controls.classList.add('active');
         } else {
             elements.controls.classList.remove('active');
+        }
+    }
+    
+    // Force hide modal method
+    forceHideModal() {
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.setAttribute('hidden', '');
+            authModal.style.display = 'none';
+            authModal.style.visibility = 'hidden';
+            console.log('Modal forcefully hidden during initialization');
+        }
+    }
+    
+    // Authentication UI Methods
+    initializeAuthUI() {
+        // Ensure auth modal is hidden on startup
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.setAttribute('hidden', '');
+            authModal.style.display = 'none';
+        }
+        
+        // Wait for authService to initialize, then set up auth state listener
+        if (window.authService) {
+            window.authService.onAuthStateChanged((user) => {
+                this.onAuthStateChanged(user);
+            });
+        } else {
+            // Retry after a short delay if authService isn't ready yet
+            setTimeout(() => this.initializeAuthUI(), 100);
+        }
+    }
+    
+    onAuthStateChanged(user) {
+        // This will be called by the authService when auth state changes
+        // The authService already handles updating the UI, so we just need to 
+        // handle any app-specific logic here if needed
+        console.log('Auth state changed:', user ? 'logged in' : 'logged out');
+    }
+    
+    async saveToHistory(instructions) {
+        if (!window.authService) return;
+        
+        const historyItem = {
+            instructions: instructions,
+            fileName: this.currentImageFile ? this.currentImageFile.name : 'unknown',
+            fileSize: this.currentImageFile ? this.currentImageFile.size : 0,
+            processingDate: new Date().toISOString(),
+            success: true
+        };
+        
+        try {
+            await window.authService.saveToHistory(historyItem);
+        } catch (error) {
+            console.error('Error saving to history:', error);
+            // Don't show error to user - history saving is optional
+        }
+    }
+    
+    // Authentication Modal Methods
+    showAuthModal() {
+        // Prevent modal from showing during app initialization
+        if (this.appInitializing) {
+            console.log('Modal blocked during app initialization');
+            return;
+        }
+        
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.removeAttribute('hidden');
+            authModal.style.display = '';
+            authModal.style.visibility = '';
+            this.updateAuthModalUI();
+            
+            // Focus on first input
+            const firstInput = authModal.querySelector('input');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+            console.log('Auth modal shown'); // Debug log
+        }
+    }
+    
+    hideAuthModal() {
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.setAttribute('hidden', '');
+            authModal.style.display = 'none';
+            authModal.style.visibility = 'hidden';
+            this.clearAuthForm();
+            console.log('Auth modal hidden'); // Debug log
+        }
+    }
+    
+    toggleAuthMode() {
+        this.isSignUpMode = !this.isSignUpMode;
+        this.updateAuthModalUI();
+    }
+    
+    updateAuthModalUI() {
+        const modalTitle = document.getElementById('modalTitle');
+        const nameGroup = document.getElementById('nameGroup');
+        const authSubmitButton = document.getElementById('authSubmitButton');
+        const authToggleText = document.getElementById('authToggleText');
+        const authToggleLink = document.getElementById('authToggleLink');
+        
+        if (this.isSignUpMode) {
+            if (modalTitle) modalTitle.textContent = 'Registrati';
+            if (nameGroup) nameGroup.hidden = false;
+            if (authSubmitButton) authSubmitButton.textContent = 'Registrati';
+            if (authToggleText) authToggleText.innerHTML = 'Hai già un account? ';
+            if (authToggleLink) authToggleLink.textContent = 'Accedi';
+        } else {
+            if (modalTitle) modalTitle.textContent = 'Accedi';
+            if (nameGroup) nameGroup.hidden = true;
+            if (authSubmitButton) authSubmitButton.textContent = 'Accedi';
+            if (authToggleText) authToggleText.innerHTML = 'Non hai un account? ';
+            if (authToggleLink) authToggleLink.textContent = 'Registrati';
+        }
+    }
+    
+    async handleAuthSubmit(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const displayName = document.getElementById('displayName').value.trim();
+        const submitButton = document.getElementById('authSubmitButton');
+        
+        // Validation
+        if (!window.authService.isEmailValid(email)) {
+            this.showStatus('Inserisci un indirizzo email valido', 'error');
+            return;
+        }
+        
+        if (!window.authService.isPasswordValid(password)) {
+            this.showStatus('La password deve contenere almeno 6 caratteri', 'error');
+            return;
+        }
+        
+        // Disable submit button during processing
+        submitButton.disabled = true;
+        submitButton.textContent = this.isSignUpMode ? 'Registrazione...' : 'Accesso...';
+        
+        try {
+            let result;
+            if (this.isSignUpMode) {
+                result = await window.authService.signUp(email, password, displayName);
+            } else {
+                result = await window.authService.signIn(email, password);
+            }
+            
+            if (result.success) {
+                this.hideAuthModal();
+                this.showStatus(this.isSignUpMode ? 'Registrazione completata!' : 'Accesso effettuato!', 'success');
+            } else {
+                this.showStatus(result.error, 'error');
+            }
+        } catch (error) {
+            this.showStatus('Errore di connessione', 'error');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.textContent = this.isSignUpMode ? 'Registrati' : 'Accedi';
+        }
+    }
+    
+    async handleForgotPassword() {
+        const email = document.getElementById('email').value.trim();
+        
+        if (!email) {
+            this.showStatus('Inserisci il tuo indirizzo email nel campo sopra', 'error');
+            return;
+        }
+        
+        if (!window.authService.isEmailValid(email)) {
+            this.showStatus('Inserisci un indirizzo email valido', 'error');
+            return;
+        }
+        
+        try {
+            const result = await window.authService.resetPassword(email);
+            if (result.success) {
+                this.showStatus(result.message, 'success');
+                this.hideAuthModal();
+            } else {
+                this.showStatus(result.error, 'error');
+            }
+        } catch (error) {
+            this.showStatus('Errore durante il reset della password', 'error');
+        }
+    }
+    
+    clearAuthForm() {
+        const form = document.getElementById('authForm');
+        if (form) {
+            form.reset();
+        }
+        this.isSignUpMode = false;
+    }
+    
+    // User Menu Methods
+    toggleUserMenu() {
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) {
+            userMenu.hidden = !userMenu.hidden;
+        }
+    }
+    
+    async handleLogout() {
+        try {
+            const result = await window.authService.signOut();
+            if (result.success) {
+                this.showStatus('Logout effettuato', 'success');
+                this.hideHistoryPanel();
+                
+                // Hide user menu
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu) userMenu.hidden = true;
+            }
+        } catch (error) {
+            this.showStatus('Errore durante il logout', 'error');
+        }
+    }
+    
+    // History Panel Methods
+    showHistoryPanel() {
+        const historyPanel = document.getElementById('historyPanel');
+        if (historyPanel) {
+            historyPanel.hidden = false;
+            historyPanel.classList.add('active');
+            
+            // Load history when panel is shown
+            if (window.authService) {
+                window.authService.loadUserHistoryUI();
+            }
+        }
+        
+        // Hide user menu
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) userMenu.hidden = true;
+    }
+    
+    hideHistoryPanel() {
+        const historyPanel = document.getElementById('historyPanel');
+        if (historyPanel) {
+            historyPanel.hidden = true;
+            historyPanel.classList.remove('active');
         }
     }
 }

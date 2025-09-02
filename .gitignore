@@ -101,3 +101,7 @@ public
 
 # Temporary files
 *.tmp
+
+# other
+config-example.js
+docs/

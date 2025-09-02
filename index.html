@@ -5,12 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firma Pulita</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>Firma Pulita</h1>
-            <p>Servizio di pulizia delle scritture per grafologi.</p>
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>Firma Pulita</h1>
+                    <p>Servizio di pulizia delle scritture per grafologi.</p>
+                </div>
+                <div class="header-auth">
+                    <button id="authButton" class="auth-button">Accedi</button>
+                    <div id="userMenu" class="user-menu" hidden>
+                        <button id="historyButton" class="menu-btn">Cronologia</button>
+                        <button id="logoutButton" class="menu-btn">Logout</button>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main class="main-content">
@@ -112,6 +128,19 @@
 
             <div class="status-message" id="statusMessage"></div>
             
+            <!-- History Panel -->
+            <div class="history-panel" id="historyPanel" hidden>
+                <div class="history-header">
+                    <h3>Cronologia Elaborazioni</h3>
+                    <button id="closeHistoryButton" class="close-btn">✕</button>
+                </div>
+                <div class="history-content">
+                    <div id="historyList">
+                        <!-- History items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
             <!-- Workflow Debug Section -->
             <div class="workflow-debug-section">
                 <button id="debugToggle" class="debug-toggle-button" type="button">
@@ -139,7 +168,52 @@
         </footer>
     </div>
 
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal" hidden style="display: none !important; visibility: hidden !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Accedi</h2>
+                <button id="closeModalButton" class="close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="authForm">
+                    <div class="form-group" id="nameGroup" hidden>
+                        <label for="displayName">Nome (opzionale)</label>
+                        <input type="text" id="displayName" placeholder="Il tuo nome">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required placeholder="la-tua-email@esempio.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="Almeno 6 caratteri">
+                    </div>
+                    <button type="submit" id="authSubmitButton" class="auth-submit-btn">Accedi</button>
+                </form>
+                <div class="auth-footer">
+                    <p id="authToggleText">Non hai un account? <a href="#" id="authToggleLink">Registrati</a></p>
+                    <p><a href="#" id="forgotPasswordLink">Password dimenticata?</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Immediate script to ensure modal is hidden -->
+    <script>
+        // Force hide modal immediately, before any other scripts run
+        (function() {
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                modal.setAttribute('hidden', '');
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+            }
+        })();
+    </script>
+
     <script src="config.js"></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
