@@ -4,6 +4,8 @@ class SignatureCleaner {
         this.setupEventListeners();
         this.currentImageFile = null;
         this.processedImageBlob = null;
+        this.originalImageFile = null;
+        this.originalImageBlob = null;
         
         // Workflow tracking
         this.workflowSteps = [];
@@ -34,6 +36,7 @@ class SignatureCleaner {
         this.resultsSection = document.getElementById('resultsSection');
         this.originalImage = document.getElementById('originalImage');
         this.processedImage = document.getElementById('processedImage');
+        this.editFurtherButton = document.getElementById('editFurtherButton');
         this.downloadButton = document.getElementById('downloadButton');
         this.resetButton = document.getElementById('resetButton');
         this.statusMessage = document.getElementById('statusMessage');
@@ -56,6 +59,9 @@ class SignatureCleaner {
         
         // Process button
         this.processButton.addEventListener('click', () => this.processImage());
+        
+        // Edit further button
+        this.editFurtherButton.addEventListener('click', () => this.editFurther());
         
         // Download button
         this.downloadButton.addEventListener('click', () => this.downloadImage());
@@ -530,6 +536,44 @@ Return only the enhanced prompt, no additional text.`;
         this.resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
+    editFurther() {
+        if (!this.processedImageBlob) return;
+        
+        // Create a File object from the processed image blob
+        const processedFile = new File([this.processedImageBlob], 'processed_image.png', {
+            type: 'image/png'
+        });
+        
+        // Store the original image as backup
+        this.originalImageFile = this.currentImageFile;
+        this.originalImageBlob = this.processedImageBlob;
+        
+        // Set the processed image as the new current image
+        this.currentImageFile = processedFile;
+        
+        // Update the preview to show the processed image
+        this.showImagePreview(processedFile);
+        
+        // Clear the instructions textarea for new input
+        this.customInstructions.value = '';
+        this.customInstructions.focus();
+        
+        // Hide the results section temporarily
+        this.resultsSection.hidden = true;
+        
+        // Show the preview section
+        this.previewSection.hidden = false;
+        
+        // Enable the process button
+        this.processButton.disabled = false;
+        
+        // Update status
+        this.showStatus('Pronto per ulteriori modifiche. Inserisci nuove istruzioni e processa di nuovo.', 'info');
+        
+        // Scroll back to the instructions area
+        this.customInstructions.scrollIntoView({ behavior: 'smooth' });
+    }
+
     downloadImage() {
         if (!this.processedImageBlob) return;
         
@@ -564,6 +608,8 @@ Return only the enhanced prompt, no additional text.`;
         // Reset all state
         this.currentImageFile = null;
         this.processedImageBlob = null;
+        this.originalImageFile = null;
+        this.originalImageBlob = null;
         this.clearWorkflowSteps();
         
         // Reset UI
