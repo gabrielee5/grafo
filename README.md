@@ -1,16 +1,33 @@
-# Signature Cleaner
+# Firma Pulita 🖋️
 
-A professional web application for Italian graphologists to clean and enhance handwritten signatures and text from photos. The app removes imperfections while preserving authentic handwriting characteristics.
+A modern, professional web application for Italian graphologists to clean and enhance handwritten signatures and text from images. The app uses advanced AI processing to remove imperfections while preserving authentic handwriting characteristics.
 
-## Features
+## ✨ Features
 
-- **Clean Interface**: Simple, professional UI designed for graphologists
-- **Drag & Drop Upload**: Easy image upload with visual feedback
-- **Custom Instructions**: Text input for specific enhancement requests
-- **AI Processing**: Google Gemini 2.5 Flash integration for advanced image enhancement
-- **Before/After Comparison**: Side-by-side display of original and processed images
-- **Download Functionality**: Save enhanced images in high quality
-- **Responsive Design**: Works on desktop and mobile devices
+### Core Functionality
+- **🤖 AI-Powered Enhancement**: Integrated with Google Gemini 2.5 Flash for intelligent image processing
+- **📤 Drag & Drop Upload**: Intuitive file upload with visual feedback and validation
+- **📝 Custom Instructions**: Italian text input with automatic translation to English for optimal AI processing
+- **🔄 Multi-Step Pipeline**: Translation → Enhancement → Processing workflow for best results
+- **📊 Before/After Comparison**: Side-by-side display with zoom and pan functionality
+- **💾 Smart Download**: Save enhanced images with custom filenames
+- **🔄 Iterative Editing**: Further edit processed images for fine-tuning
+
+### Modern UI/UX Design
+- **🎨 Glassmorphism Design**: Modern glass-effect cards with backdrop blur
+- **🌈 Beautiful Gradients**: Professional color palette with smooth transitions
+- **✨ Smooth Animations**: Staggered fade-in effects and micro-interactions
+- **📱 Fully Responsive**: Optimized experience across all devices
+- **♿ Accessibility First**: Proper focus states, keyboard navigation, and screen reader support
+- **🔍 Image Zoom & Pan**: Professional image viewing with zoom controls
+- **⚡ Performance Optimized**: Hardware-accelerated animations and efficient rendering
+
+### Advanced Features
+- **🔍 Workflow Debugging**: Optional display of processing steps and prompts
+- **🌐 Multi-Language Support**: Italian interface with intelligent English processing
+- **📋 Process Transparency**: View all AI prompts and responses used in enhancement
+- **🔄 Fallback Processing**: Automatic fallback if translation/enhancement fails
+- **⏱️ Real-time Status**: Live updates during processing with detailed progress
 
 ## Setup Instructions
 
@@ -57,12 +74,22 @@ php -S localhost:8000
 - **Important**: HTTPS is required for Gemini API calls
 - Ensure `config.js` is properly configured with your API key
 
-## Usage
+## 🚀 Usage
 
-1. **Upload Image**: Drag and drop or click to select a signature/handwriting image
-2. **Add Instructions** (Optional): Describe specific enhancements needed
-3. **Process**: Click "Process Image" to enhance the image
-4. **Download**: Save the cleaned image to your device
+### Basic Workflow
+1. **📤 Upload Image**: Drag and drop or click to select a signature/handwriting image (JPG, PNG, WEBP)
+2. **📝 Add Instructions**: Describe specific enhancements in Italian (required)
+   - Example: *"Pulisci e migliora questa firma rimuovendo il rumore di sfondo, aumentando il contrasto ed eliminando le imperfezioni preservando le caratteristiche autentiche della scrittura"*
+3. **⚙️ Process**: Click "Elabora Immagine" to start the AI enhancement
+4. **👁️ Review**: Compare original and enhanced images side-by-side
+5. **💾 Download**: Save the enhanced image with a custom filename
+6. **🔄 Edit Further**: Optionally process the enhanced image again for additional improvements
+
+### Advanced Features
+- **🔍 Zoom & Pan**: Use zoom controls on any image for detailed inspection
+- **🐛 Debug Mode**: Click "Mostra Processo" to view the complete processing pipeline
+- **📊 Workflow Transparency**: See all translation steps, enhanced prompts, and AI responses
+- **🔄 Iterative Enhancement**: Use "Modifica Ulteriormente" to refine results
 
 ## Supported File Formats
 
@@ -77,25 +104,42 @@ php -S localhost:8000
 - The `.env` file is excluded from version control
 - Use HTTPS in production for secure API calls
 
-## File Structure
+## 📁 File Structure
 
 ```
-signature-cleaner/
-├── index.html          # Main application interface
-├── style.css          # Responsive styling
-├── script.js          # Core functionality
-├── config.js          # Configuration (git-ignored)
-├── .env               # Environment template
-├── .gitignore         # Git exclusions
-└── README.md          # This file
+firma-pulita/
+├── index.html          # Main application interface with modern HTML5 structure
+├── style.css          # Modern CSS with glassmorphism, animations, and responsive design
+├── script.js          # Advanced JavaScript with AI pipeline and workflow tracking
+├── config.js          # Configuration file with API settings
+├── LICENSE            # MIT License
+├── README.md          # This documentation
+├── AUTH_OPTIONS.md    # Authentication options documentation
+└── .gitignore         # Git exclusions
 ```
 
-## Technical Details
+## 🔧 Technical Details
 
-- **Frontend**: Vanilla HTML, CSS, JavaScript
-- **AI Processing**: Google Gemini 2.5 Flash API
-- **Image Processing**: Canvas API for basic enhancements
-- **No Backend Required**: Pure client-side application
+### Technology Stack
+- **Frontend**: Modern HTML5, CSS3 with advanced features, Vanilla JavaScript ES6+
+- **AI Processing**: Google Gemini 2.5 Flash API with multi-model support
+- **Image Processing**: HTML5 Canvas API with advanced pixel manipulation
+- **Architecture**: Pure client-side SPA (Single Page Application)
+- **Styling**: CSS Grid, Flexbox, CSS Custom Properties, Glassmorphism design
+- **Animations**: CSS Keyframes, Transforms, and Transitions with hardware acceleration
+
+### Advanced Features
+- **Multi-Step AI Pipeline**: Translation → Enhancement → Image Processing
+- **Workflow Tracking**: Complete audit trail of all processing steps
+- **Responsive Images**: Optimized loading and display across all screen sizes
+- **Performance**: Efficient DOM manipulation, requestAnimationFrame for smooth animations
+- **Error Handling**: Comprehensive error recovery with fallback processing
+- **Accessibility**: WCAG 2.1 AA compliant with proper ARIA attributes
+
+### Browser Compatibility
+- **Modern Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **Required APIs**: Fetch API, Canvas API, File API, Drag & Drop API
+- **Progressive Enhancement**: Graceful degradation for older browsers
 
 ## Troubleshooting
 
@@ -113,13 +157,22 @@ signature-cleaner/
    - Serve the app over HTTP/HTTPS, not file:// protocol
    - Use a local server for development
 
-### Browser Compatibility
+## 📄 License
 
-- Chrome 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## License
+## 👨‍💻 Author
 
-Created for professional graphological analysis in Italy.
+**Gabriele Fabietti**
+- Created for professional graphological analysis in Italy
+- Designed with modern UI/UX principles and accessibility in mind
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+
+## 🌟 Acknowledgments
+
+- Google Gemini API for powerful AI image processing
+- Italian graphology community for requirements and feedback
+- Modern web standards and accessibility guidelines
