@@ -43,6 +43,9 @@ class SignatureCleaner {
         this.debugToggle = document.getElementById('debugToggle');
         this.workflowStepsElement = document.getElementById('workflowSteps');
         this.workflowLadder = document.getElementById('workflowLadder');
+        
+        // Zoom control elements
+        this.initializeZoomElements();
     }
 
     setupEventListeners() {
@@ -71,6 +74,9 @@ class SignatureCleaner {
         
         // Debug toggle button
         this.debugToggle.addEventListener('click', () => this.toggleDebugView());
+        
+        // Zoom functionality
+        this.setupZoomListeners();
     }
 
     handleDragOver(e) {
@@ -778,6 +784,179 @@ Return only the enhanced prompt, no additional text.`;
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    initializeZoomElements() {
+        // Store zoom states for each image
+        this.zoomStates = {
+            preview: { scale: 1, isDragging: false, startX: 0, startY: 0, translateX: 0, translateY: 0 },
+            original: { scale: 1, isDragging: false, startX: 0, startY: 0, translateX: 0, translateY: 0 },
+            processed: { scale: 1, isDragging: false, startX: 0, startY: 0, translateX: 0, translateY: 0 }
+        };
+
+        // Get control elements
+        this.zoomElements = {
+            preview: {
+                controls: document.getElementById('previewZoomControls'),
+                zoomIn: document.getElementById('previewZoomIn'),
+                zoomOut: document.getElementById('previewZoomOut'),
+                level: document.getElementById('previewZoomLevel'),
+                image: this.previewImage,
+                wrapper: this.previewImage?.parentElement
+            },
+            original: {
+                controls: document.getElementById('originalZoomControls'),
+                zoomIn: document.getElementById('originalZoomIn'),
+                zoomOut: document.getElementById('originalZoomOut'),
+                level: document.getElementById('originalZoomLevel'),
+                image: this.originalImage,
+                wrapper: this.originalImage?.parentElement
+            },
+            processed: {
+                controls: document.getElementById('processedZoomControls'),
+                zoomIn: document.getElementById('processedZoomIn'),
+                zoomOut: document.getElementById('processedZoomOut'),
+                level: document.getElementById('processedZoomLevel'),
+                image: this.processedImage,
+                wrapper: this.processedImage?.parentElement
+            }
+        };
+    }
+
+    setupZoomListeners() {
+        Object.keys(this.zoomElements).forEach(key => {
+            const elements = this.zoomElements[key];
+            if (!elements.image || !elements.wrapper) return;
+
+            // Zoom in button
+            elements.zoomIn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.zoomImage(key, 0.25);
+            });
+
+            // Zoom out button
+            elements.zoomOut.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.zoomImage(key, -0.25);
+            });
+
+            // Double click to reset
+            elements.image.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                this.resetZoom(key);
+            });
+
+            // Mouse wheel zoom
+            elements.wrapper.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                this.zoomImage(key, delta);
+            });
+
+            // Pan functionality
+            this.setupPanListeners(key);
+        });
+    }
+
+    setupPanListeners(imageKey) {
+        const elements = this.zoomElements[imageKey];
+        const state = this.zoomStates[imageKey];
+
+        elements.image.addEventListener('mousedown', (e) => {
+            if (state.scale <= 1) return;
+            
+            e.preventDefault();
+            state.isDragging = true;
+            state.startX = e.clientX - state.translateX;
+            state.startY = e.clientY - state.translateY;
+            
+            elements.image.style.cursor = 'grabbing';
+            elements.wrapper.classList.add('active');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!state.isDragging) return;
+
+            state.translateX = e.clientX - state.startX;
+            state.translateY = e.clientY - state.startY;
+            
+            this.updateImageTransform(imageKey);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (state.isDragging) {
+                state.isDragging = false;
+                elements.image.style.cursor = state.scale > 1 ? 'grab' : 'default';
+                elements.wrapper.classList.remove('active');
+            }
+        });
+    }
+
+    zoomImage(imageKey, delta) {
+        const state = this.zoomStates[imageKey];
+        const elements = this.zoomElements[imageKey];
+        
+        const newScale = Math.min(4, Math.max(0.5, state.scale + delta));
+        
+        if (newScale !== state.scale) {
+            state.scale = newScale;
+            
+            // Reset pan when zooming out to 1 or less
+            if (state.scale <= 1) {
+                state.translateX = 0;
+                state.translateY = 0;
+                elements.wrapper.classList.remove('zoomed');
+                elements.image.style.cursor = 'default';
+            } else {
+                elements.wrapper.classList.add('zoomed');
+                elements.image.style.cursor = 'grab';
+            }
+            
+            this.updateImageTransform(imageKey);
+            this.updateZoomControls(imageKey);
+        }
+    }
+
+    resetZoom(imageKey) {
+        const state = this.zoomStates[imageKey];
+        const elements = this.zoomElements[imageKey];
+        
+        state.scale = 1;
+        state.translateX = 0;
+        state.translateY = 0;
+        
+        elements.wrapper.classList.remove('zoomed');
+        elements.image.style.cursor = 'default';
+        
+        this.updateImageTransform(imageKey);
+        this.updateZoomControls(imageKey);
+    }
+
+    updateImageTransform(imageKey) {
+        const state = this.zoomStates[imageKey];
+        const elements = this.zoomElements[imageKey];
+        
+        const transform = `scale(${state.scale}) translate(${state.translateX / state.scale}px, ${state.translateY / state.scale}px)`;
+        elements.image.style.transform = transform;
+    }
+
+    updateZoomControls(imageKey) {
+        const state = this.zoomStates[imageKey];
+        const elements = this.zoomElements[imageKey];
+        
+        // Update zoom level display
+        elements.level.textContent = `${Math.round(state.scale * 100)}%`;
+        
+        // Update button states
+        elements.zoomOut.disabled = state.scale <= 0.5;
+        elements.zoomIn.disabled = state.scale >= 4;
+        
+        // Show/hide controls based on activity
+        if (state.scale !== 1) {
+            elements.controls.classList.add('active');
+        } else {
+            elements.controls.classList.remove('active');
+        }
     }
 }
 
