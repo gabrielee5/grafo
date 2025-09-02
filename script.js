@@ -688,12 +688,19 @@ Return only the enhanced prompt, no additional text.`;
     toggleDebugView() {
         this.debugVisible = !this.debugVisible;
         
+        const debugIcon = this.debugToggle.querySelector('.debug-icon');
+        const buttonText = this.debugToggle.querySelector('.debug-icon').nextSibling;
+        
         if (this.debugVisible) {
             this.workflowStepsElement.hidden = false;
-            this.debugToggle.textContent = 'Nascondi Processo';
+            // Change to up arrow
+            debugIcon.innerHTML = '<polyline points="18,15 12,9 6,15"></polyline>';
+            buttonText.textContent = ' Nascondi Processo';
         } else {
             this.workflowStepsElement.hidden = true;
-            this.debugToggle.textContent = 'Mostra Processo';
+            // Change to down arrow
+            debugIcon.innerHTML = '<polyline points="6,9 12,15 18,9"></polyline>';
+            buttonText.textContent = ' Mostra Processo';
         }
     }
 
