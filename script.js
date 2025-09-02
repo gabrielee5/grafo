@@ -533,12 +533,25 @@ Return only the enhanced prompt, no additional text.`;
     downloadImage() {
         if (!this.processedImageBlob) return;
         
+        // Generate default filename
+        const defaultFilename = this.currentImageFile.name.replace(/\.[^/.]+$/, '') + '_enhanced.png';
+        
+        // Prompt user to edit filename
+        const filename = prompt('Inserisci il nome del file:', defaultFilename);
+        
+        // If user cancelled or entered empty string, don't download
+        if (!filename || filename.trim() === '') {
+            return;
+        }
+        
+        // Ensure filename has .png extension
+        const finalFilename = filename.endsWith('.png') ? filename : filename + '.png';
+        
         const url = URL.createObjectURL(this.processedImageBlob);
         const a = document.createElement('a');
-        const filename = this.currentImageFile.name.replace(/\.[^/.]+$/, '') + '_enhanced.png';
         
         a.href = url;
-        a.download = filename;
+        a.download = finalFilename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
