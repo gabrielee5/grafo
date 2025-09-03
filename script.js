@@ -251,6 +251,12 @@ class SignatureCleaner {
             return;
         }
 
+        // Check if user's email is verified
+        if (!window.authService.isEmailVerified()) {
+            this.showStatus('Verifica la tua email per utilizzare il servizio. Controlla la tua casella di posta e clicca sul link di verifica.', 'error');
+            return;
+        }
+
         this.setProcessingState(true);
         this.clearWorkflowSteps(); // Clear previous workflow steps
 
