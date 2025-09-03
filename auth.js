@@ -244,6 +244,12 @@ class AuthService {
                 authModal.style.display = 'none';
             }
             
+            // Enable process button
+            const processButton = document.getElementById('processButton');
+            if (processButton && processButton.textContent !== 'Elabora Immagine') {
+                processButton.title = '';
+            }
+            
             // Show history panel if exists
             const historyPanel = document.getElementById('historyPanel');
             if (historyPanel) {
@@ -261,6 +267,12 @@ class AuthService {
             if (authModal) {
                 authModal.setAttribute('hidden', '');
                 authModal.style.display = 'none';
+            }
+            
+            // Update process button to show authentication requirement
+            const processButton = document.getElementById('processButton');
+            if (processButton) {
+                processButton.title = 'Accesso richiesto per utilizzare il servizio';
             }
             
             // Hide history panel

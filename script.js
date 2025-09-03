@@ -291,6 +291,13 @@ class SignatureCleaner {
     async processImage() {
         if (!this.currentImageFile) return;
 
+        // Check if user is authenticated
+        if (!window.authService || !window.authService.isLoggedIn()) {
+            this.showStatus('Accesso richiesto per utilizzare il servizio', 'error');
+            this.showAuthModal();
+            return;
+        }
+
         this.setProcessingState(true);
         this.clearWorkflowSteps(); // Clear previous workflow steps
 
@@ -562,8 +569,17 @@ Return only the enhanced prompt, no additional text.`;
             // Get the backend API URL
             const processUrl = window.configLoader?.getProcessImageUrl() || `${CONFIG.API_BASE_URL}/process-image`;
 
+            // Get authentication token
+            const authToken = await window.authService.getCurrentUser()?.getIdToken();
+            const headers = {};
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
             const response = await fetch(processUrl, {
                 method: 'POST',
+                headers: headers,
                 body: formData
             });
 

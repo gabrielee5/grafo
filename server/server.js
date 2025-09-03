@@ -4,9 +4,51 @@ const cors = require('cors');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const admin = require('firebase-admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Initialize Firebase Admin
+try {
+    // Initialize with project ID from environment
+    admin.initializeApp({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        // For production, you'd want to use a service account key
+        // credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('✅ Firebase Admin initialized successfully');
+} catch (error) {
+    console.error('❌ Firebase Admin initialization failed:', error);
+}
+
+// Authentication middleware
+async function authenticateUser(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                error: 'Authentication required. Please log in to use this service.',
+                success: false
+            });
+        }
+
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        
+        // Verify the Firebase token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        req.user = decodedToken; // Add user info to request
+        next();
+        
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return res.status(401).json({
+            error: 'Invalid or expired authentication token. Please log in again.',
+            success: false
+        });
+    }
+}
 
 // Security middleware
 app.use(helmet({
@@ -298,8 +340,8 @@ Make it more technical. Focus on image cleaning, contrast improvement, and handw
     }
 });
 
-// Gemini API proxy endpoint
-app.post('/api/process-image', processImageLimiter, upload.single('image'), async (req, res) => {
+// Gemini API proxy endpoint - now requires authentication
+app.post('/api/process-image', processImageLimiter, authenticateUser, upload.single('image'), async (req, res) => {
     try {
         // Validate required fields
         if (!req.file) {
