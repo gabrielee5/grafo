@@ -20,11 +20,67 @@
                     <p>Servizio di pulizia delle scritture per grafologi.</p>
                 </div>
                 <div class="header-auth">
-                    <button id="authButton" class="auth-button">Accedi</button>
+                    <button id="authButton" class="auth-button">
+                        <div class="auth-button-avatar" id="authButtonAvatar" hidden>
+                            <div class="avatar-circle">
+                                <span class="avatar-initials" id="avatarInitials"></span>
+                            </div>
+                            <div class="status-indicator" id="statusIndicator">
+                                <svg class="status-icon verified" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5z"/>
+                                </svg>
+                                <svg class="status-icon unverified" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zM6.457 4.957l1.414-1.414L9.043 4.72l1.414-1.414a.5.5 0 0 1 .708.708L9.751 5.428l1.414 1.414a.5.5 0 0 1-.708.708L9.043 6.136 7.629 7.55a.5.5 0 1 1-.708-.708l1.414-1.414L6.921 4.014a.5.5 0 0 1 .708-.708z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="auth-button-content">
+                            <span class="auth-button-text" id="authButtonText">Accedi</span>
+                            <span class="auth-button-subtitle" id="authButtonSubtitle" hidden></span>
+                        </div>
+                        <div class="auth-button-icon">
+                            <svg class="chevron-icon" viewBox="0 0 16 16" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06z"/>
+                            </svg>
+                        </div>
+                    </button>
                     <div id="userMenu" class="user-menu" hidden>
-                        <button id="accountSettingsButton" class="menu-btn">Impostazioni Account</button>
-                        <button id="historyButton" class="menu-btn">Cronologia</button>
-                        <button id="logoutButton" class="menu-btn">Logout</button>
+                        <div class="user-menu-header">
+                            <div class="user-menu-avatar">
+                                <div class="avatar-circle large">
+                                    <span class="avatar-initials" id="menuAvatarInitials"></span>
+                                </div>
+                            </div>
+                            <div class="user-menu-info">
+                                <div class="user-menu-name" id="userMenuName"></div>
+                                <div class="user-menu-email" id="userMenuEmail"></div>
+                                <div class="user-menu-status" id="userMenuStatus"></div>
+                            </div>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <div class="user-menu-actions">
+                            <button id="accountSettingsButton" class="menu-btn">
+                                <svg class="menu-icon" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                                    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.292-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.292c.415.764-.42 1.6-1.185 1.184l-.292-.159a1.873 1.873 0 0 0-2.692 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.693-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.292A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+                                </svg>
+                                Impostazioni Account
+                            </button>
+                            <button id="historyButton" class="menu-btn">
+                                <svg class="menu-icon" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                                </svg>
+                                Cronologia
+                            </button>
+                            <button id="logoutButton" class="menu-btn logout">
+                                <svg class="menu-icon" viewBox="0 0 16 16" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0v2z"/>
+                                    <path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

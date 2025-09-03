@@ -307,11 +307,45 @@ class AuthService {
         
         if (!authButton) return; // UI not ready yet
         
+        // Get UI elements for enhanced auth button
+        const authButtonAvatar = document.getElementById('authButtonAvatar');
+        const authButtonText = document.getElementById('authButtonText');
+        const authButtonSubtitle = document.getElementById('authButtonSubtitle');
+        const avatarInitials = document.getElementById('avatarInitials');
+        const statusIndicator = document.getElementById('statusIndicator');
+        
+        // User menu elements
+        const userMenuName = document.getElementById('userMenuName');
+        const userMenuEmail = document.getElementById('userMenuEmail');
+        const userMenuStatus = document.getElementById('userMenuStatus');
+        const menuAvatarInitials = document.getElementById('menuAvatarInitials');
+        
         if (user) {
+            const displayName = this.getUserDisplayName();
+            const initials = this.getUserInitials();
+            
             if (user.emailVerified) {
                 // User is logged in and email is verified
-                authButton.textContent = this.getUserDisplayName();
-                authButton.className = 'auth-button logged-in';
+                authButton.className = 'auth-button logged-in verified';
+                
+                // Show avatar and hide chevron for logged in users
+                if (authButtonAvatar) authButtonAvatar.hidden = false;
+                if (avatarInitials) avatarInitials.textContent = initials;
+                if (authButtonText) authButtonText.textContent = displayName;
+                if (authButtonSubtitle) {
+                    // authButtonSubtitle.textContent = 'Account verificato';
+                    authButtonSubtitle.hidden = false;
+                }
+                
+                // Update user menu
+                if (userMenuName) userMenuName.textContent = displayName;
+                if (userMenuEmail) userMenuEmail.textContent = user.email;
+                if (userMenuStatus) {
+                    userMenuStatus.textContent = 'Email verificata';
+                    userMenuStatus.className = 'user-menu-status verified';
+                }
+                if (menuAvatarInitials) menuAvatarInitials.textContent = initials;
+                
                 // Keep user menu hidden by default - user must click to open it
                 if (userMenu) userMenu.hidden = true;
                 
@@ -337,8 +371,26 @@ class AuthService {
                 }
             } else {
                 // User is logged in but email is not verified
-                authButton.textContent = this.getUserDisplayName() + ' (verifica email)';
                 authButton.className = 'auth-button logged-in unverified';
+                
+                // Show avatar
+                if (authButtonAvatar) authButtonAvatar.hidden = false;
+                if (avatarInitials) avatarInitials.textContent = initials;
+                if (authButtonText) authButtonText.textContent = displayName;
+                if (authButtonSubtitle) {
+                    authButtonSubtitle.textContent = 'Verifica email';
+                    authButtonSubtitle.hidden = false;
+                }
+                
+                // Update user menu
+                if (userMenuName) userMenuName.textContent = displayName;
+                if (userMenuEmail) userMenuEmail.textContent = user.email;
+                if (userMenuStatus) {
+                    userMenuStatus.textContent = 'Email non verificata';
+                    userMenuStatus.className = 'user-menu-status unverified';
+                }
+                if (menuAvatarInitials) menuAvatarInitials.textContent = initials;
+                
                 // Keep user menu hidden by default - user must click to open it
                 if (userMenu) userMenu.hidden = true;
                 
@@ -369,8 +421,13 @@ class AuthService {
             }
         } else {
             // User is not logged in
-            authButton.textContent = 'Accedi';
             authButton.className = 'auth-button';
+            
+            // Hide avatar and show login text
+            if (authButtonAvatar) authButtonAvatar.hidden = true;
+            if (authButtonText) authButtonText.textContent = 'Accedi';
+            if (authButtonSubtitle) authButtonSubtitle.hidden = true;
+            
             if (userMenu) userMenu.hidden = true;
             
             // Hide verification banner
@@ -391,6 +448,32 @@ class AuthService {
             const historyPanel = document.getElementById('historyPanel');
             if (historyPanel) historyPanel.hidden = true;
         }
+    }
+    
+    // Helper method to generate user initials
+    getUserInitials() {
+        if (!this.currentUser) return '?';
+        
+        const displayName = this.currentUser.displayName;
+        const email = this.currentUser.email;
+        
+        if (displayName) {
+            // Get initials from display name
+            const names = displayName.trim().split(' ');
+            if (names.length >= 2) {
+                return names[0][0] + names[names.length - 1][0];
+            } else if (names.length === 1) {
+                return names[0][0] + (names[0][1] || '');
+            }
+        }
+        
+        // Fallback to email initials
+        if (email) {
+            const emailParts = email.split('@')[0];
+            return emailParts[0] + (emailParts[1] || '');
+        }
+        
+        return '?';
     }
 
     async loadUserHistoryUI() {

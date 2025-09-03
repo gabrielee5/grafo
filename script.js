@@ -155,6 +155,7 @@ class SignatureCleaner {
             
             if (userMenu && authButton && !userMenu.contains(e.target) && !authButton.contains(e.target)) {
                 userMenu.hidden = true;
+                authButton.classList.remove('menu-open');
             }
         });
     }
@@ -1151,8 +1152,20 @@ Return only the enhanced prompt, no additional text.`;
     // User Menu Methods
     toggleUserMenu() {
         const userMenu = document.getElementById('userMenu');
+        const authButton = document.getElementById('authButton');
+        
         if (userMenu) {
+            const isOpening = userMenu.hidden;
             userMenu.hidden = !userMenu.hidden;
+            
+            // Add/remove menu-open class for chevron animation
+            if (authButton) {
+                if (isOpening) {
+                    authButton.classList.add('menu-open');
+                } else {
+                    authButton.classList.remove('menu-open');
+                }
+            }
         }
     }
     
@@ -1163,7 +1176,9 @@ Return only the enhanced prompt, no additional text.`;
         
         // Hide user menu
         const userMenu = document.getElementById('userMenu');
+        const authButton = document.getElementById('authButton');
         if (userMenu) userMenu.hidden = true;
+        if (authButton) authButton.classList.remove('menu-open');
     }
     
     async handleLogout() {
@@ -1175,7 +1190,9 @@ Return only the enhanced prompt, no additional text.`;
                 
                 // Hide user menu
                 const userMenu = document.getElementById('userMenu');
+                const authButton = document.getElementById('authButton');
                 if (userMenu) userMenu.hidden = true;
+                if (authButton) authButton.classList.remove('menu-open');
             }
         } catch (error) {
             this.showStatus('Errore durante il logout', 'error');
@@ -1197,7 +1214,9 @@ Return only the enhanced prompt, no additional text.`;
         
         // Hide user menu
         const userMenu = document.getElementById('userMenu');
+        const authButton = document.getElementById('authButton');
         if (userMenu) userMenu.hidden = true;
+        if (authButton) authButton.classList.remove('menu-open');
     }
     
     hideHistoryPanel() {
