@@ -94,7 +94,15 @@ class AuthService {
                 await result.user.updateProfile({ displayName });
             }
             
-            return { success: true, user: result.user };
+            // Send email verification
+            await result.user.sendEmailVerification();
+            
+            return { 
+                success: true, 
+                user: result.user,
+                emailVerificationSent: true,
+                message: 'Account creato con successo! Ti abbiamo inviato un\'email di verifica. Controlla la tua casella di posta e clicca sul link per attivare il tuo account.'
+            };
         } catch (error) {
             return { 
                 success: false, 
@@ -130,9 +138,54 @@ class AuthService {
         }
     }
 
+    // Email verification methods
+    async sendEmailVerification() {
+        try {
+            if (!this.currentUser) {
+                return { 
+                    success: false, 
+                    error: 'Nessun utente autenticato' 
+                };
+            }
+            
+            if (this.currentUser.emailVerified) {
+                return { 
+                    success: false, 
+                    error: 'Email già verificata' 
+                };
+            }
+            
+            await this.currentUser.sendEmailVerification();
+            return { 
+                success: true, 
+                message: 'Email di verifica inviata. Controlla la tua casella di posta.' 
+            };
+        } catch (error) {
+            return { 
+                success: false, 
+                error: this.getItalianErrorMessage(error.code) 
+            };
+        }
+    }
+
+    async reloadUserData() {
+        try {
+            if (!this.currentUser) return false;
+            await this.currentUser.reload();
+            return this.currentUser.emailVerified;
+        } catch (error) {
+            console.error('Error reloading user data:', error);
+            return false;
+        }
+    }
+
     // User data methods
     isLoggedIn() {
         return this.currentUser !== null;
+    }
+
+    isEmailVerified() {
+        return this.currentUser !== null && this.currentUser.emailVerified;
     }
 
     getCurrentUser() {
@@ -150,6 +203,12 @@ class AuthService {
             // Save to localStorage as fallback
             this.saveToLocalStorage(historyItem);
             return { success: false, error: 'Utente non autenticato' };
+        }
+
+        if (!this.isEmailVerified()) {
+            // Save to localStorage as fallback
+            this.saveToLocalStorage(historyItem);
+            return { success: false, error: 'Email non verificata' };
         }
 
         try {
@@ -178,6 +237,10 @@ class AuthService {
 
     async getUserHistory(limit = 50) {
         if (!this.isLoggedIn() || !this.initialized) {
+            return this.getLocalStorageHistory();
+        }
+
+        if (!this.isEmailVerified()) {
             return this.getLocalStorageHistory();
         }
 
@@ -240,37 +303,76 @@ class AuthService {
     updateAuthUI(user) {
         const authButton = document.getElementById('authButton');
         const userMenu = document.getElementById('userMenu');
+        const emailVerificationBanner = document.getElementById('emailVerificationBanner');
         
         if (!authButton) return; // UI not ready yet
         
         if (user) {
-            // User is logged in
-            authButton.textContent = this.getUserDisplayName();
-            authButton.className = 'auth-button logged-in';
-            if (userMenu) userMenu.hidden = false;
-            
-            // Hide any open auth modals
-            if (window.authModalManager) {
-                window.authModalManager.hideAllModals();
-            }
-            
-            // Enable process button
-            const processButton = document.getElementById('processButton');
-            if (processButton && processButton.textContent !== 'Elabora Immagine') {
-                processButton.title = '';
-            }
-            
-            // Show history panel if exists
-            const historyPanel = document.getElementById('historyPanel');
-            if (historyPanel) {
-                historyPanel.hidden = false;
-                this.loadUserHistoryUI();
+            if (user.emailVerified) {
+                // User is logged in and email is verified
+                authButton.textContent = this.getUserDisplayName();
+                authButton.className = 'auth-button logged-in';
+                if (userMenu) userMenu.hidden = false;
+                
+                // Hide verification banner
+                if (emailVerificationBanner) emailVerificationBanner.hidden = true;
+                
+                // Hide any open auth modals
+                if (window.authModalManager) {
+                    window.authModalManager.hideAllModals();
+                }
+                
+                // Enable process button
+                const processButton = document.getElementById('processButton');
+                if (processButton && processButton.textContent !== 'Elabora Immagine') {
+                    processButton.title = '';
+                }
+                
+                // Show history panel if exists
+                const historyPanel = document.getElementById('historyPanel');
+                if (historyPanel) {
+                    historyPanel.hidden = false;
+                    this.loadUserHistoryUI();
+                }
+            } else {
+                // User is logged in but email is not verified
+                authButton.textContent = this.getUserDisplayName() + ' (non verificato)';
+                authButton.className = 'auth-button logged-in unverified';
+                if (userMenu) userMenu.hidden = false;
+                
+                // Show verification banner
+                if (emailVerificationBanner) {
+                    emailVerificationBanner.hidden = false;
+                    // Update banner content
+                    const bannerText = emailVerificationBanner.querySelector('.banner-text');
+                    if (bannerText) {
+                        bannerText.textContent = 'Verifica la tua email per accedere a tutte le funzionalità. Controlla la tua casella di posta.';
+                    }
+                }
+                
+                // Hide any open auth modals
+                if (window.authModalManager) {
+                    window.authModalManager.hideAllModals();
+                }
+                
+                // Disable process button
+                const processButton = document.getElementById('processButton');
+                if (processButton) {
+                    processButton.title = 'Verifica la tua email per utilizzare il servizio';
+                }
+                
+                // Hide history panel
+                const historyPanel = document.getElementById('historyPanel');
+                if (historyPanel) historyPanel.hidden = true;
             }
         } else {
             // User is not logged in
             authButton.textContent = 'Accedi';
             authButton.className = 'auth-button';
             if (userMenu) userMenu.hidden = true;
+            
+            // Hide verification banner
+            if (emailVerificationBanner) emailVerificationBanner.hidden = true;
             
             // Hide any open auth modals
             if (window.authModalManager) {
@@ -462,6 +564,9 @@ class AuthModalManager {
         // Password visibility toggles
         this.setupPasswordToggles();
 
+        // Email verification banner events
+        this.setupVerificationBannerEvents();
+
         // Click outside to close
         this.signInModal?.addEventListener('click', (e) => {
             if (e.target === this.signInModal) this.hideSignInModal();
@@ -490,6 +595,24 @@ class AuthModalManager {
                 }
             });
         });
+    }
+
+    setupVerificationBannerEvents() {
+        const resendButton = document.getElementById('resendVerificationButton');
+        const checkButton = document.getElementById('checkVerificationButton');
+        const dismissButton = document.getElementById('dismissBannerButton');
+
+        if (resendButton) {
+            resendButton.addEventListener('click', () => this.handleResendVerification());
+        }
+
+        if (checkButton) {
+            checkButton.addEventListener('click', () => this.handleCheckVerification());
+        }
+
+        if (dismissButton) {
+            dismissButton.addEventListener('click', () => this.handleDismissBanner());
+        }
     }
 
     showSignInModal() {
@@ -695,7 +818,9 @@ class AuthModalManager {
             
             if (result.success) {
                 this.hideSignUpModal();
-                window.signatureCleaner?.showStatus('Registrazione completata con successo!', 'success');
+                // Show email verification message
+                const message = result.message || 'Registrazione completata con successo! Controlla la tua email per la verifica.';
+                window.signatureCleaner?.showStatus(message, 'success');
             } else {
                 // Show error on appropriate field
                 if (result.error.includes('email') || result.error.includes('uso')) {
@@ -738,6 +863,68 @@ class AuthModalManager {
             }
         } catch (error) {
             this.showFieldError('signInEmail', 'Errore durante il reset della password');
+        }
+    }
+
+    async handleResendVerification() {
+        if (!window.authService) return;
+
+        const resendButton = document.getElementById('resendVerificationButton');
+        if (resendButton) {
+            resendButton.disabled = true;
+            resendButton.textContent = 'Invio in corso...';
+        }
+
+        try {
+            const result = await window.authService.sendEmailVerification();
+            
+            if (result.success) {
+                window.signatureCleaner?.showStatus(result.message, 'success');
+            } else {
+                window.signatureCleaner?.showStatus(result.error, 'error');
+            }
+        } catch (error) {
+            window.signatureCleaner?.showStatus('Errore durante l\'invio dell\'email', 'error');
+        } finally {
+            if (resendButton) {
+                resendButton.disabled = false;
+                resendButton.textContent = 'Rinvia Email';
+            }
+        }
+    }
+
+    async handleCheckVerification() {
+        if (!window.authService) return;
+
+        const checkButton = document.getElementById('checkVerificationButton');
+        if (checkButton) {
+            checkButton.disabled = true;
+            checkButton.textContent = 'Controllo...';
+        }
+
+        try {
+            const isVerified = await window.authService.reloadUserData();
+            
+            if (isVerified) {
+                window.signatureCleaner?.showStatus('Email verificata con successo!', 'success');
+                // The auth state change will automatically update the UI
+            } else {
+                window.signatureCleaner?.showStatus('Email non ancora verificata. Controlla la tua casella di posta e clicca sul link di verifica.', 'warning');
+            }
+        } catch (error) {
+            window.signatureCleaner?.showStatus('Errore durante la verifica', 'error');
+        } finally {
+            if (checkButton) {
+                checkButton.disabled = false;
+                checkButton.textContent = 'Ho Verificato';
+            }
+        }
+    }
+
+    handleDismissBanner() {
+        const banner = document.getElementById('emailVerificationBanner');
+        if (banner) {
+            banner.hidden = true;
         }
     }
 }

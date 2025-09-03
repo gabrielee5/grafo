@@ -38,6 +38,16 @@ async function authenticateUser(req, res, next) {
         
         // Verify the Firebase token
         const decodedToken = await admin.auth().verifyIdToken(token);
+        
+        // Check if email is verified
+        if (!decodedToken.email_verified) {
+            return res.status(403).json({
+                error: 'Email verification required. Please verify your email address to use this service.',
+                success: false,
+                emailVerificationRequired: true
+            });
+        }
+        
         req.user = decodedToken; // Add user info to request
         next();
         
@@ -85,7 +95,9 @@ const corsOptions = {
             'http://localhost:8080',
             'http://127.0.0.1:8080',
             'http://localhost:8081',
-            'http://127.0.0.1:8081',  // Added for your http-server
+            'http://127.0.0.1:8081',
+            'http://localhost:8082',
+            'http://127.0.0.1:8082',  // Added for your current http-server
             'http://localhost:5173',  // Vite default
             'http://127.0.0.1:5173'
         ],

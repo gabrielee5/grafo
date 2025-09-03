@@ -29,6 +29,26 @@
             </div>
         </header>
 
+        <!-- Email Verification Banner -->
+        <div id="emailVerificationBanner" class="verification-banner" hidden>
+            <div class="banner-content">
+                <div class="banner-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <div class="banner-message">
+                    <span class="banner-text">Verifica la tua email per accedere a tutte le funzionalità. Controlla la tua casella di posta.</span>
+                </div>
+                <div class="banner-actions">
+                    <button id="resendVerificationButton" class="resend-btn">Rinvia Email</button>
+                    <button id="checkVerificationButton" class="check-btn">Ho Verificato</button>
+                    <button id="dismissBannerButton" class="dismiss-btn" aria-label="Chiudi">✕</button>
+                </div>
+            </div>
+        </div>
+
         <main class="main-content">
             <div class="upload-section">
                 <div class="upload-area" id="uploadArea">

@@ -40,6 +40,83 @@ body {
     font-size: 1.1rem;
 }
 
+/* Email Verification Banner */
+.verification-banner {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #92400e;
+    padding: 16px 20px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 0;
+}
+
+.banner-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.banner-icon {
+    flex-shrink: 0;
+}
+
+.banner-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #92400e;
+}
+
+.banner-message {
+    flex: 1;
+    min-width: 200px;
+}
+
+.banner-text {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.resend-btn, .check-btn {
+    background: rgba(146, 64, 14, 0.1);
+    color: #92400e;
+    border: 1px solid rgba(146, 64, 14, 0.2);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.resend-btn:hover, .check-btn:hover {
+    background: rgba(146, 64, 14, 0.2);
+    border-color: rgba(146, 64, 14, 0.3);
+}
+
+.dismiss-btn {
+    background: transparent;
+    color: #92400e;
+    border: none;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+}
+
+.dismiss-btn:hover {
+    background: rgba(146, 64, 14, 0.1);
+}
+
 /* Main content */
 .main-content {
     flex: 1;
@@ -759,6 +836,15 @@ body {
 
 .auth-button.logged-in {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.auth-button.logged-in.unverified {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    position: relative;
+}
+
+.auth-button.logged-in.unverified:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .user-menu {
