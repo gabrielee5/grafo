@@ -143,12 +143,13 @@ Return only the English translation, no additional text.`;
             }
         };
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
         const response = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': process.env.GEMINI_API_KEY,
             },
             body: JSON.stringify(geminiPayload)
         });
@@ -164,6 +165,11 @@ Return only the English translation, no additional text.`;
 
         const geminiResponse = await response.json();
 
+        // Debug: Log the response in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Translation Gemini Response:', JSON.stringify(geminiResponse, null, 2));
+        }
+
         if (geminiResponse.candidates && 
             geminiResponse.candidates[0] && 
             geminiResponse.candidates[0].content && 
@@ -178,13 +184,15 @@ Return only the English translation, no additional text.`;
             } else {
                 res.status(400).json({
                     error: 'No translation found in response',
-                    success: false
+                    success: false,
+                    debug: process.env.NODE_ENV === 'development' ? geminiResponse : undefined
                 });
             }
         } else {
             res.status(400).json({
                 error: 'Invalid response from translation service',
-                success: false
+                success: false,
+                debug: process.env.NODE_ENV === 'development' ? geminiResponse : undefined
             });
         }
 
@@ -223,34 +231,29 @@ app.post('/api/enhance-prompt', apiLimiter, async (req, res) => {
             });
         }
 
-        const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${text}"
+        const enhancementPrompt = `Enhance this image processing instruction: "${text}"
 
-Focus on:
-- Image cleaning and noise reduction
-- Contrast and clarity improvements
-- Preservation of authentic handwriting characteristics
-- Technical specifications for signature enhancement
-
-Return only the enhanced prompt, no additional text.`;
+Make it more technical. Focus on image cleaning, contrast improvement, and handwriting preservation. Return only the enhanced prompt.`;
 
         const geminiPayload = {
             contents: [{
                 parts: [{ text: enhancementPrompt }]
             }],
             generationConfig: {
-                maxOutputTokens: 1024,
-                temperature: 0.4,
+                maxOutputTokens: 512,
+                temperature: 0.3,
                 topP: 1,
-                topK: 32
+                topK: 16
             }
         };
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
         const response = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': process.env.GEMINI_API_KEY,
             },
             body: JSON.stringify(geminiPayload)
         });
@@ -266,27 +269,45 @@ Return only the enhanced prompt, no additional text.`;
 
         const geminiResponse = await response.json();
 
-        if (geminiResponse.candidates && 
-            geminiResponse.candidates[0] && 
-            geminiResponse.candidates[0].content && 
-            geminiResponse.candidates[0].content.parts) {
+        // Debug: Log the response in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Enhancement Gemini Response:', JSON.stringify(geminiResponse, null, 2));
+        }
+
+        if (geminiResponse.candidates && geminiResponse.candidates[0]) {
+            const candidate = geminiResponse.candidates[0];
             
-            const textPart = geminiResponse.candidates[0].content.parts.find(part => part.text);
-            if (textPart) {
-                res.json({
-                    success: true,
-                    enhancedText: textPart.text.trim()
-                });
-            } else {
+            // Check for MAX_TOKENS or other finish reasons
+            if (candidate.finishReason === 'MAX_TOKENS') {
                 res.status(400).json({
-                    error: 'No enhancement found in response',
-                    success: false
+                    error: 'Enhancement prompt too long, using original text',
+                    success: false,
+                    fallback: text // Return original text as fallback
                 });
+                return;
             }
+            
+            if (candidate.content && candidate.content.parts) {
+                const textPart = candidate.content.parts.find(part => part.text);
+                if (textPart) {
+                    res.json({
+                        success: true,
+                        enhancedText: textPart.text.trim()
+                    });
+                    return;
+                }
+            }
+            
+            res.status(400).json({
+                error: 'No enhancement found in response',
+                success: false,
+                debug: process.env.NODE_ENV === 'development' ? geminiResponse : undefined
+            });
         } else {
             res.status(400).json({
                 error: 'Invalid response from enhancement service',
-                success: false
+                success: false,
+                debug: process.env.NODE_ENV === 'development' ? geminiResponse : undefined
             });
         }
 
@@ -331,36 +352,53 @@ app.post('/api/process-image', processImageLimiter, upload.single('image'), asyn
         const mimeType = req.file.mimetype;
 
         const geminiPayload = {
-            contents: [
-                {
-                    parts: [
-                        {
-                            text: req.body.instructions
-                        },
-                        {
-                            inline_data: {
-                                mime_type: mimeType,
-                                data: base64Image
-                            }
+            contents: [{
+                parts: [
+                    {
+                        text: req.body.instructions
+                    },
+                    {
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: base64Image
                         }
-                    ]
-                }
-            ],
+                    }
+                ]
+            }],
             generationConfig: {
                 maxOutputTokens: 4096,
                 temperature: 0.4,
                 topP: 1,
                 topK: 32
-            }
+            },
+            safetySettings: [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH", 
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
         };
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent`;
 
         // Make request to Gemini API
         const response = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': process.env.GEMINI_API_KEY,
             },
             body: JSON.stringify(geminiPayload)
         });
@@ -376,32 +414,51 @@ app.post('/api/process-image', processImageLimiter, upload.single('image'), asyn
 
         const geminiResponse = await response.json();
 
-        // Parse the response to extract the image data
+        // Parse the response to extract the image data (matches original format)
         if (geminiResponse.candidates && 
             geminiResponse.candidates[0] && 
             geminiResponse.candidates[0].content && 
-            geminiResponse.candidates[0].content.parts && 
-            geminiResponse.candidates[0].content.parts[0]) {
+            geminiResponse.candidates[0].content.parts) {
             
-            const responseText = geminiResponse.candidates[0].content.parts[0].text;
+            const parts = geminiResponse.candidates[0].content.parts;
             
-            // Look for base64 image data in the response
-            const base64Match = responseText.match(/data:image\/[^;]+;base64,([^"'\s]+)/);
-            
-            if (base64Match) {
-                const imageData = base64Match[0];
-                res.json({
-                    success: true,
-                    imageData: imageData,
-                    originalFileName: req.file.originalname
-                });
-            } else {
-                res.status(400).json({
-                    error: 'No processed image found in response',
-                    success: false,
-                    debug: process.env.NODE_ENV === 'development' ? responseText : undefined
-                });
+            // Look for image data in the response parts (like original)
+            for (const part of parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    // Found image data - return as data URL
+                    const imageData = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    
+                    res.json({
+                        success: true,
+                        imageData: `data:${mimeType};base64,${imageData}`,
+                        originalFileName: req.file.originalname
+                    });
+                    return;
+                }
             }
+            
+            // If no image found, look for text response with base64 data
+            const textPart = parts.find(part => part.text);
+            if (textPart) {
+                const responseText = textPart.text;
+                const base64Match = responseText.match(/data:image\/[^;]+;base64,([^"'\s]+)/);
+                
+                if (base64Match) {
+                    res.json({
+                        success: true,
+                        imageData: base64Match[0],
+                        originalFileName: req.file.originalname
+                    });
+                    return;
+                }
+            }
+            
+            res.status(400).json({
+                error: 'No processed image found in response',
+                success: false,
+                debug: process.env.NODE_ENV === 'development' ? JSON.stringify(parts, null, 2) : undefined
+            });
         } else {
             res.status(400).json({
                 error: 'Invalid response from image processing service',
