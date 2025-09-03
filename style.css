@@ -42,11 +42,12 @@ body {
 
 /* Email Verification Banner */
 .verification-banner {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #92400e;
-    padding: 16px 20px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    padding: 12px 20px;
     margin: -20px -20px 20px -20px;
     border-radius: 0;
+    border-left: 4px solid #3b82f6;
 }
 
 .banner-content {
@@ -63,9 +64,9 @@ body {
 }
 
 .banner-icon svg {
-    width: 24px;
-    height: 24px;
-    color: #92400e;
+    width: 20px;
+    height: 20px;
+    color: #3b82f6;
 }
 
 .banner-message {
@@ -74,8 +75,8 @@ body {
 }
 
 .banner-text {
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 400;
+    font-size: 0.9rem;
 }
 
 .banner-actions {
@@ -85,36 +86,37 @@ body {
 }
 
 .resend-btn, .check-btn {
-    background: rgba(146, 64, 14, 0.1);
-    color: #92400e;
-    border: 1px solid rgba(146, 64, 14, 0.2);
-    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 6px 12px;
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .resend-btn:hover, .check-btn:hover {
-    background: rgba(146, 64, 14, 0.2);
-    border-color: rgba(146, 64, 14, 0.3);
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .dismiss-btn {
     background: transparent;
-    color: #92400e;
+    color: #6b7280;
     border: none;
     padding: 4px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .dismiss-btn:hover {
-    background: rgba(146, 64, 14, 0.1);
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e40af;
 }
 
 /* Main content */
@@ -839,12 +841,14 @@ body {
 }
 
 .auth-button.logged-in.unverified {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     position: relative;
+    opacity: 0.8;
 }
 
 .auth-button.logged-in.unverified:hover {
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    opacity: 1;
 }
 
 .user-menu {

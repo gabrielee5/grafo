@@ -336,7 +336,7 @@ class AuthService {
                 }
             } else {
                 // User is logged in but email is not verified
-                authButton.textContent = this.getUserDisplayName() + ' (non verificato)';
+                authButton.textContent = this.getUserDisplayName() + ' (verifica email)';
                 authButton.className = 'auth-button logged-in unverified';
                 if (userMenu) userMenu.hidden = false;
                 
@@ -346,7 +346,7 @@ class AuthService {
                     // Update banner content
                     const bannerText = emailVerificationBanner.querySelector('.banner-text');
                     if (bannerText) {
-                        bannerText.textContent = 'Verifica la tua email per accedere a tutte le funzionalità. Controlla la tua casella di posta.';
+                        bannerText.textContent = 'Ti abbiamo inviato un\'email di verifica. Controlla la tua casella di posta per attivare tutte le funzionalità.';
                     }
                 }
                 
