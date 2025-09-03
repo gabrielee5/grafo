@@ -22,6 +22,7 @@
                 <div class="header-auth">
                     <button id="authButton" class="auth-button">Accedi</button>
                     <div id="userMenu" class="user-menu" hidden>
+                        <button id="accountSettingsButton" class="menu-btn">Impostazioni Account</button>
                         <button id="historyButton" class="menu-btn">Cronologia</button>
                         <button id="logoutButton" class="menu-btn">Logout</button>
                     </div>
@@ -307,12 +308,132 @@
         </div>
     </div>
 
+    <!-- Account Settings Modal -->
+    <div id="accountSettingsModal" class="auth-modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Impostazioni Account</h2>
+                <button id="closeAccountSettingsButton" class="close-btn" aria-label="Chiudi">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="account-settings-tabs">
+                    <button class="tab-btn active" data-tab="profile">Profilo</button>
+                    <button class="tab-btn" data-tab="password">Password</button>
+                </div>
+
+                <!-- Profile Tab -->
+                <div id="profileTab" class="tab-content active">
+                    <form id="profileForm" novalidate>
+                        <div class="form-group">
+                            <label for="currentDisplayName">Nome visualizzato</label>
+                            <input 
+                                type="text" 
+                                id="currentDisplayName" 
+                                placeholder="Il tuo nome"
+                                autocomplete="name"
+                            >
+                            <div class="field-error" id="displayname-error" role="alert"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentEmail">Indirizzo email</label>
+                            <input 
+                                type="email" 
+                                id="currentEmail" 
+                                placeholder="la-tua-email@esempio.com"
+                                autocomplete="email"
+                                aria-describedby="email-change-error"
+                            >
+                            <div class="field-help">Cambiare l'email richiederà una nuova verifica</div>
+                            <div class="field-error" id="email-change-error" role="alert"></div>
+                        </div>
+                        <button type="submit" class="auth-submit-btn" id="profileSubmitButton">
+                            <span class="button-text">Aggiorna Profilo</span>
+                            <div class="button-spinner" hidden></div>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Password Tab -->
+                <div id="passwordTab" class="tab-content">
+                    <form id="passwordForm" novalidate>
+                        <div class="form-group">
+                            <label for="currentPassword">Password attuale</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="currentPassword" 
+                                    required 
+                                    placeholder="La tua password attuale"
+                                    autocomplete="current-password"
+                                    aria-describedby="current-password-error"
+                                >
+                                <button type="button" class="password-toggle" aria-label="Mostra password">
+                                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="field-error" id="current-password-error" role="alert"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nuova password</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="newPassword" 
+                                    required 
+                                    placeholder="Almeno 6 caratteri"
+                                    autocomplete="new-password"
+                                    aria-describedby="new-password-error new-password-help"
+                                >
+                                <button type="button" class="password-toggle" aria-label="Mostra password">
+                                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="field-help" id="new-password-help">Minimo 6 caratteri</div>
+                            <div class="field-error" id="new-password-error" role="alert"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Conferma nuova password</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="confirmPassword" 
+                                    required 
+                                    placeholder="Ripeti la nuova password"
+                                    autocomplete="new-password"
+                                    aria-describedby="confirm-password-error"
+                                >
+                                <button type="button" class="password-toggle" aria-label="Mostra password">
+                                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="field-error" id="confirm-password-error" role="alert"></div>
+                        </div>
+                        <button type="submit" class="auth-submit-btn" id="passwordSubmitButton">
+                            <span class="button-text">Cambia Password</span>
+                            <div class="button-spinner" hidden></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Immediate script to ensure modals are hidden -->
     <script>
         // Force hide auth modals immediately, before any other scripts run
         (function() {
             const signInModal = document.getElementById('signInModal');
             const signUpModal = document.getElementById('signUpModal');
+            const accountSettingsModal = document.getElementById('accountSettingsModal');
             if (signInModal) {
                 signInModal.setAttribute('hidden', '');
                 signInModal.style.display = 'none';
@@ -320,6 +441,10 @@
             if (signUpModal) {
                 signUpModal.setAttribute('hidden', '');
                 signUpModal.style.display = 'none';
+            }
+            if (accountSettingsModal) {
+                accountSettingsModal.setAttribute('hidden', '');
+                accountSettingsModal.style.display = 'none';
             }
         })();
     </script>

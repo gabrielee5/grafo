@@ -126,8 +126,13 @@ class SignatureCleaner {
         }
         
         // User menu controls
+        const accountSettingsButton = document.getElementById('accountSettingsButton');
         const historyButton = document.getElementById('historyButton');
         const logoutButton = document.getElementById('logoutButton');
+        
+        if (accountSettingsButton) {
+            accountSettingsButton.addEventListener('click', () => this.showAccountSettings());
+        }
         
         if (historyButton) {
             historyButton.addEventListener('click', () => this.showHistoryPanel());
@@ -1149,6 +1154,16 @@ Return only the enhanced prompt, no additional text.`;
         if (userMenu) {
             userMenu.hidden = !userMenu.hidden;
         }
+    }
+    
+    showAccountSettings() {
+        if (window.authModalManager) {
+            window.authModalManager.showAccountSettingsModal();
+        }
+        
+        // Hide user menu
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) userMenu.hidden = true;
     }
     
     async handleLogout() {

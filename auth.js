@@ -512,6 +512,7 @@ class AuthModalManager {
     constructor() {
         this.signInModal = document.getElementById('signInModal');
         this.signUpModal = document.getElementById('signUpModal');
+        this.accountSettingsModal = document.getElementById('accountSettingsModal');
         this.activeModal = null;
         this.setupEventListeners();
     }
@@ -528,12 +529,20 @@ class AuthModalManager {
         const signUpForm = document.getElementById('signUpForm');
         const showSignInLink = document.getElementById('showSignInLink');
 
+        // Account Settings Modal Events
+        const closeAccountSettingsButton = document.getElementById('closeAccountSettingsButton');
+        const profileForm = document.getElementById('profileForm');
+        const passwordForm = document.getElementById('passwordForm');
+
         // Close button events
         if (closeSignInButton) {
             closeSignInButton.addEventListener('click', () => this.hideSignInModal());
         }
         if (closeSignUpButton) {
             closeSignUpButton.addEventListener('click', () => this.hideSignUpModal());
+        }
+        if (closeAccountSettingsButton) {
+            closeAccountSettingsButton.addEventListener('click', () => this.hideAccountSettingsModal());
         }
 
         // Form submission events
@@ -542,6 +551,12 @@ class AuthModalManager {
         }
         if (signUpForm) {
             signUpForm.addEventListener('submit', (e) => this.handleSignUpSubmit(e));
+        }
+        if (profileForm) {
+            profileForm.addEventListener('submit', (e) => this.handleProfileSubmit(e));
+        }
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', (e) => this.handlePasswordSubmit(e));
         }
 
         // Modal switching events
@@ -566,6 +581,9 @@ class AuthModalManager {
         // Password visibility toggles
         this.setupPasswordToggles();
 
+        // Tab switching for account settings
+        this.setupAccountSettingsTabs();
+
         // Email verification banner events
         this.setupVerificationBannerEvents();
 
@@ -575,6 +593,9 @@ class AuthModalManager {
         });
         this.signUpModal?.addEventListener('click', (e) => {
             if (e.target === this.signUpModal) this.hideSignUpModal();
+        });
+        this.accountSettingsModal?.addEventListener('click', (e) => {
+            if (e.target === this.accountSettingsModal) this.hideAccountSettingsModal();
         });
 
         // Escape key to close
@@ -661,9 +682,32 @@ class AuthModalManager {
         this.clearForm('signUpForm');
     }
 
+    showAccountSettingsModal() {
+        this.hideAllModals();
+        this.accountSettingsModal.removeAttribute('hidden');
+        this.activeModal = 'accountSettings';
+        
+        // Load current user data
+        this.loadCurrentUserData();
+        
+        // Focus first tab
+        setTimeout(() => {
+            const firstTabInput = document.getElementById('currentDisplayName');
+            if (firstTabInput) firstTabInput.focus();
+        }, 100);
+    }
+
+    hideAccountSettingsModal() {
+        this.accountSettingsModal.setAttribute('hidden', '');
+        if (this.activeModal === 'accountSettings') this.activeModal = null;
+        this.clearForm('profileForm');
+        this.clearForm('passwordForm');
+    }
+
     hideAllModals() {
         this.hideSignInModal();
         this.hideSignUpModal();
+        this.hideAccountSettingsModal();
     }
 
     switchToSignUp() {
@@ -698,6 +742,16 @@ class AuthModalManager {
             errorElement = document.getElementById('signup-email-error');
         } else if (fieldId === 'signUpPassword') {
             errorElement = document.getElementById('signup-password-error');
+        } else if (fieldId === 'currentDisplayName') {
+            errorElement = document.getElementById('displayname-error');
+        } else if (fieldId === 'currentEmail') {
+            errorElement = document.getElementById('email-change-error');
+        } else if (fieldId === 'currentPassword') {
+            errorElement = document.getElementById('current-password-error');
+        } else if (fieldId === 'newPassword') {
+            errorElement = document.getElementById('new-password-error');
+        } else if (fieldId === 'confirmPassword') {
+            errorElement = document.getElementById('confirm-password-error');
         } else {
             // Handle sign in fields and fallback
             errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
@@ -717,6 +771,16 @@ class AuthModalManager {
             errorElement = document.getElementById('signup-email-error');
         } else if (fieldId === 'signUpPassword') {
             errorElement = document.getElementById('signup-password-error');
+        } else if (fieldId === 'currentDisplayName') {
+            errorElement = document.getElementById('displayname-error');
+        } else if (fieldId === 'currentEmail') {
+            errorElement = document.getElementById('email-change-error');
+        } else if (fieldId === 'currentPassword') {
+            errorElement = document.getElementById('current-password-error');
+        } else if (fieldId === 'newPassword') {
+            errorElement = document.getElementById('new-password-error');
+        } else if (fieldId === 'confirmPassword') {
+            errorElement = document.getElementById('confirm-password-error');
         } else {
             // Handle sign in fields and fallback
             errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
@@ -927,6 +991,185 @@ class AuthModalManager {
         const banner = document.getElementById('emailVerificationBanner');
         if (banner) {
             banner.hidden = true;
+        }
+    }
+
+    // Account Settings Methods
+    setupAccountSettingsTabs() {
+        const tabButtons = document.querySelectorAll('#accountSettingsModal .tab-btn');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tabName = e.target.getAttribute('data-tab');
+                this.switchTab(tabName);
+            });
+        });
+    }
+
+    switchTab(tabName) {
+        // Update tab buttons
+        const tabButtons = document.querySelectorAll('#accountSettingsModal .tab-btn');
+        tabButtons.forEach(button => {
+            if (button.getAttribute('data-tab') === tabName) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+
+        // Update tab content
+        const tabContents = document.querySelectorAll('#accountSettingsModal .tab-content');
+        tabContents.forEach(content => {
+            if (content.id === tabName + 'Tab') {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+    }
+
+    loadCurrentUserData() {
+        if (!window.authService || !window.authService.currentUser) return;
+
+        const user = window.authService.currentUser;
+        const displayNameInput = document.getElementById('currentDisplayName');
+        const emailInput = document.getElementById('currentEmail');
+
+        if (displayNameInput) {
+            displayNameInput.value = user.displayName || '';
+        }
+        if (emailInput) {
+            emailInput.value = user.email || '';
+        }
+    }
+
+    async handleProfileSubmit(e) {
+        e.preventDefault();
+        if (!window.authService || !window.authService.currentUser) return;
+
+        const displayName = document.getElementById('currentDisplayName').value.trim();
+        const email = document.getElementById('currentEmail').value.trim();
+        const currentUser = window.authService.currentUser;
+
+        // Clear previous errors
+        this.clearFieldError('currentDisplayName');
+        this.clearFieldError('currentEmail');
+
+        let hasChanges = false;
+        let requiresReauth = false;
+
+        this.setSubmitButtonState('profileForm', true, 'Aggiornamento...');
+
+        try {
+            // Update display name if changed
+            if (displayName !== (currentUser.displayName || '')) {
+                await currentUser.updateProfile({ displayName: displayName });
+                hasChanges = true;
+            }
+
+            // Update email if changed
+            if (email !== currentUser.email) {
+                const emailValidation = window.authService.validateEmail(email);
+                if (!emailValidation.isValid) {
+                    this.showFieldError('currentEmail', emailValidation.error);
+                    return;
+                }
+
+                try {
+                    await currentUser.updateEmail(email);
+                    hasChanges = true;
+                    requiresReauth = false;
+                } catch (error) {
+                    if (error.code === 'auth/requires-recent-login') {
+                        this.showFieldError('currentEmail', 'Per cambiare email è necessario effettuare nuovamente l\'accesso. Fai logout e accedi di nuovo.');
+                        requiresReauth = true;
+                    } else {
+                        this.showFieldError('currentEmail', window.authService.getItalianErrorMessage(error.code));
+                    }
+                    return;
+                }
+            }
+
+            if (hasChanges) {
+                let message = 'Profilo aggiornato con successo!';
+                if (email !== currentUser.email && !requiresReauth) {
+                    message += ' Controlla la tua nuova email per la verifica.';
+                }
+                window.signatureCleaner?.showStatus(message, 'success');
+                this.hideAccountSettingsModal();
+            } else {
+                window.signatureCleaner?.showStatus('Nessun cambiamento rilevato', 'info');
+            }
+
+        } catch (error) {
+            console.error('Profile update error:', error);
+            window.signatureCleaner?.showStatus('Errore durante l\'aggiornamento del profilo', 'error');
+        } finally {
+            this.setSubmitButtonState('profileForm', false, 'Aggiorna Profilo');
+        }
+    }
+
+    async handlePasswordSubmit(e) {
+        e.preventDefault();
+        if (!window.authService || !window.authService.currentUser) return;
+
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // Clear previous errors
+        this.clearFieldError('currentPassword');
+        this.clearFieldError('newPassword');
+        this.clearFieldError('confirmPassword');
+
+        // Validate inputs
+        const currentPasswordValidation = window.authService.validatePassword(currentPassword);
+        const newPasswordValidation = window.authService.validatePassword(newPassword);
+
+        if (!currentPasswordValidation.isValid) {
+            this.showFieldError('currentPassword', currentPasswordValidation.error);
+            return;
+        }
+
+        if (!newPasswordValidation.isValid) {
+            this.showFieldError('newPassword', newPasswordValidation.error);
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            this.showFieldError('confirmPassword', 'Le password non coincidono');
+            return;
+        }
+
+        if (currentPassword === newPassword) {
+            this.showFieldError('newPassword', 'La nuova password deve essere diversa da quella attuale');
+            return;
+        }
+
+        this.setSubmitButtonState('passwordForm', true, 'Cambiando password...');
+
+        try {
+            const user = window.authService.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+            
+            // Reauthenticate user
+            await user.reauthenticateWithCredential(credential);
+            
+            // Update password
+            await user.updatePassword(newPassword);
+            
+            window.signatureCleaner?.showStatus('Password cambiata con successo!', 'success');
+            this.hideAccountSettingsModal();
+
+        } catch (error) {
+            console.error('Password change error:', error);
+            
+            if (error.code === 'auth/wrong-password') {
+                this.showFieldError('currentPassword', 'Password attuale errata');
+            } else {
+                this.showFieldError('currentPassword', window.authService.getItalianErrorMessage(error.code));
+            }
+        } finally {
+            this.setSubmitButtonState('passwordForm', false, 'Cambia Password');
         }
     }
 }
