@@ -574,8 +574,7 @@ Return only the enhanced prompt, no additional text.`;
 
             const data = await response.json();
             
-            // Debug: Log the API response
-            console.log('Backend API Response:', data);
+            // Process the API response
             
             if (data.success && data.imageData) {
                 // The backend returns a data URL (data:image/...;base64,...)

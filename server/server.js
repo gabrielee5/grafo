@@ -134,13 +134,7 @@ Return only the English translation, no additional text.`;
         const geminiPayload = {
             contents: [{
                 parts: [{ text: translationPrompt }]
-            }],
-            generationConfig: {
-                maxOutputTokens: 1024,
-                temperature: 0.3,
-                topP: 1,
-                topK: 32
-            }
+            }]
         };
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
@@ -165,11 +159,6 @@ Return only the English translation, no additional text.`;
 
         const geminiResponse = await response.json();
 
-        // Debug: Log the response in development
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Translation Gemini Response:', JSON.stringify(geminiResponse, null, 2));
-        }
-
         if (geminiResponse.candidates && 
             geminiResponse.candidates[0] && 
             geminiResponse.candidates[0].content && 
@@ -185,7 +174,7 @@ Return only the English translation, no additional text.`;
                 res.status(400).json({
                     error: 'No translation found in response',
                     success: false,
-                    debug: process.env.NODE_ENV === 'development' ? geminiResponse : undefined
+                    debug: undefined
                 });
             }
         } else {
@@ -238,13 +227,7 @@ Make it more technical. Focus on image cleaning, contrast improvement, and handw
         const geminiPayload = {
             contents: [{
                 parts: [{ text: enhancementPrompt }]
-            }],
-            generationConfig: {
-                maxOutputTokens: 512,
-                temperature: 0.3,
-                topP: 1,
-                topK: 16
-            }
+            }]
         };
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
@@ -268,11 +251,6 @@ Make it more technical. Focus on image cleaning, contrast improvement, and handw
         }
 
         const geminiResponse = await response.json();
-
-        // Debug: Log the response in development
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Enhancement Gemini Response:', JSON.stringify(geminiResponse, null, 2));
-        }
 
         if (geminiResponse.candidates && geminiResponse.candidates[0]) {
             const candidate = geminiResponse.candidates[0];
@@ -364,31 +342,7 @@ app.post('/api/process-image', processImageLimiter, upload.single('image'), asyn
                         }
                     }
                 ]
-            }],
-            generationConfig: {
-                maxOutputTokens: 4096,
-                temperature: 0.4,
-                topP: 1,
-                topK: 32
-            },
-            safetySettings: [
-                {
-                    category: "HARM_CATEGORY_HARASSMENT",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    category: "HARM_CATEGORY_HATE_SPEECH", 
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                }
-            ]
+            }]
         };
 
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent`;
