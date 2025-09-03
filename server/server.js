@@ -101,6 +101,204 @@ app.get('/api/firebase-config', (req, res) => {
     res.json(config);
 });
 
+// Text translation endpoint
+app.post('/api/translate-text', apiLimiter, async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || typeof text !== 'string') {
+            return res.status(400).json({
+                error: 'Text is required and must be a string',
+                success: false
+            });
+        }
+
+        if (text.length > 2000) {
+            return res.status(400).json({
+                error: 'Text too long. Maximum 2000 characters.',
+                success: false
+            });
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({
+                error: 'Server configuration error',
+                success: false
+            });
+        }
+
+        const translationPrompt = `Translate this Italian text to English, preserving technical terminology related to handwriting analysis and graphology: "${text}"
+
+Return only the English translation, no additional text.`;
+
+        const geminiPayload = {
+            contents: [{
+                parts: [{ text: translationPrompt }]
+            }],
+            generationConfig: {
+                maxOutputTokens: 1024,
+                temperature: 0.3,
+                topP: 1,
+                topK: 32
+            }
+        };
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+        const response = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(geminiPayload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error for translation:', response.status, errorText);
+            return res.status(response.status).json({
+                error: 'Translation service temporarily unavailable',
+                success: false
+            });
+        }
+
+        const geminiResponse = await response.json();
+
+        if (geminiResponse.candidates && 
+            geminiResponse.candidates[0] && 
+            geminiResponse.candidates[0].content && 
+            geminiResponse.candidates[0].content.parts) {
+            
+            const textPart = geminiResponse.candidates[0].content.parts.find(part => part.text);
+            if (textPart) {
+                res.json({
+                    success: true,
+                    translatedText: textPart.text.trim()
+                });
+            } else {
+                res.status(400).json({
+                    error: 'No translation found in response',
+                    success: false
+                });
+            }
+        } else {
+            res.status(400).json({
+                error: 'Invalid response from translation service',
+                success: false
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in translation:', error);
+        res.status(500).json({
+            error: 'Internal server error during translation',
+            success: false
+        });
+    }
+});
+
+// Prompt enhancement endpoint
+app.post('/api/enhance-prompt', apiLimiter, async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || typeof text !== 'string') {
+            return res.status(400).json({
+                error: 'Text is required and must be a string',
+                success: false
+            });
+        }
+
+        if (text.length > 2000) {
+            return res.status(400).json({
+                error: 'Text too long. Maximum 2000 characters.',
+                success: false
+            });
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({
+                error: 'Server configuration error',
+                success: false
+            });
+        }
+
+        const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${text}"
+
+Focus on:
+- Image cleaning and noise reduction
+- Contrast and clarity improvements
+- Preservation of authentic handwriting characteristics
+- Technical specifications for signature enhancement
+
+Return only the enhanced prompt, no additional text.`;
+
+        const geminiPayload = {
+            contents: [{
+                parts: [{ text: enhancementPrompt }]
+            }],
+            generationConfig: {
+                maxOutputTokens: 1024,
+                temperature: 0.4,
+                topP: 1,
+                topK: 32
+            }
+        };
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+        const response = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(geminiPayload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error for enhancement:', response.status, errorText);
+            return res.status(response.status).json({
+                error: 'Enhancement service temporarily unavailable',
+                success: false
+            });
+        }
+
+        const geminiResponse = await response.json();
+
+        if (geminiResponse.candidates && 
+            geminiResponse.candidates[0] && 
+            geminiResponse.candidates[0].content && 
+            geminiResponse.candidates[0].content.parts) {
+            
+            const textPart = geminiResponse.candidates[0].content.parts.find(part => part.text);
+            if (textPart) {
+                res.json({
+                    success: true,
+                    enhancedText: textPart.text.trim()
+                });
+            } else {
+                res.status(400).json({
+                    error: 'No enhancement found in response',
+                    success: false
+                });
+            }
+        } else {
+            res.status(400).json({
+                error: 'Invalid response from enhancement service',
+                success: false
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in enhancement:', error);
+        res.status(500).json({
+            error: 'Internal server error during enhancement',
+            success: false
+        });
+    }
+});
+
 // Gemini API proxy endpoint
 app.post('/api/process-image', processImageLimiter, upload.single('image'), async (req, res) => {
     try {

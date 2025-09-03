@@ -407,22 +407,48 @@ class SignatureCleaner {
         }
     }
 
-    // Translation function - temporarily simplified until backend text API is added
+    // Translation function using backend API
     async translateToEnglish(italianText) {
         const translationStep = this.addWorkflowStep({
-            title: 'Traduzione Italiano → Inglese (Saltata)',
+            title: 'Traduzione Italiano → Inglese',
             status: 'in-progress',
             startTime: new Date()
         });
 
         try {
-            // For now, skip translation and use Italian text directly
-            // TODO: Add text translation endpoint to backend server
-            const result = italianText; // Use original Italian text
+            const translationPrompt = `Translate this Italian text to English, preserving technical terminology related to handwriting analysis and graphology: "${italianText}"
+
+Return only the English translation, no additional text.`;
+
+            this.updateWorkflowStep(translationStep.id, { prompt: translationPrompt });
+
+            // Use backend translation endpoint
+            const translateUrl = window.configLoader?.getTranslateTextUrl() || `${CONFIG.API_BASE_URL}/translate-text`;
+            
+            const response = await fetch(translateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: italianText })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Translation failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.success || !data.translatedText) {
+                throw new Error(data.error || 'No translation received');
+            }
+
+            const result = data.translatedText.trim();
             
             this.updateWorkflowStep(translationStep.id, {
                 status: 'completed',
-                response: 'Traduzione saltata - usando testo italiano direttamente',
+                response: result,
                 endTime: new Date()
             });
 
@@ -439,22 +465,54 @@ class SignatureCleaner {
         }
     }
 
-    // Prompt enhancement function - temporarily simplified until backend text API is added
+    // Prompt enhancement function using backend API
     async enhancePrompt(translatedText) {
         const enhancementStep = this.addWorkflowStep({
-            title: 'Miglioramento Prompt (Saltato)',
+            title: 'Miglioramento Prompt Tecnico',
             status: 'in-progress',
             startTime: new Date()
         });
 
         try {
-            // For now, skip enhancement and use original text
-            // TODO: Add text enhancement endpoint to backend server
-            const result = translatedText; // Use original text
+            const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
+
+Focus on:
+- Image cleaning and noise reduction
+- Contrast and clarity improvements
+- Preservation of authentic handwriting characteristics
+- Technical specifications for signature enhancement
+
+Return only the enhanced prompt, no additional text.`;
+
+            this.updateWorkflowStep(enhancementStep.id, { prompt: enhancementPrompt });
+
+            // Use backend enhancement endpoint
+            const enhanceUrl = window.configLoader?.getEnhancePromptUrl() || `${CONFIG.API_BASE_URL}/enhance-prompt`;
+            
+            const response = await fetch(enhanceUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: translatedText })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Enhancement failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.success || !data.enhancedText) {
+                throw new Error(data.error || 'No enhancement received');
+            }
+
+            const result = data.enhancedText.trim();
             
             this.updateWorkflowStep(enhancementStep.id, {
                 status: 'completed',
-                response: 'Miglioramento saltato - usando testo originale',
+                response: result,
                 endTime: new Date()
             });
 
@@ -471,45 +529,7 @@ class SignatureCleaner {
         }
     }
 
-    // Text-only API call for translation and enhancement
-    async callGeminiTextAPI(prompt) {
-        try {
-            const requestBody = {
-                contents: [{
-                    parts: [{ text: prompt }]
-                }]
-            };
-
-            const response = await fetch(this.apiUrl.replace('gemini-2.5-flash-image-preview', 'gemini-2.5-flash'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': this.apiKey,
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-                const textPart = data.candidates[0].content.parts.find(part => part.text);
-                if (textPart) {
-                    return textPart.text;
-                }
-            }
-            
-            throw new Error('No text response received');
-            
-        } catch (error) {
-            console.error('Text API error:', error);
-            throw error;
-        }
-    }
+    // Removed callGeminiTextAPI - now using backend endpoints for translation and enhancement
 
     async callGeminiAPI(base64Image, prompt) {
         try {
