@@ -6,7 +6,6 @@
 .env.production.local
 
 # API Keys and secrets
-config.js
 secrets.json
 *.key
 *.pem
