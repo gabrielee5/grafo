@@ -312,7 +312,8 @@ class AuthService {
                 // User is logged in and email is verified
                 authButton.textContent = this.getUserDisplayName();
                 authButton.className = 'auth-button logged-in';
-                if (userMenu) userMenu.hidden = false;
+                // Keep user menu hidden by default - user must click to open it
+                if (userMenu) userMenu.hidden = true;
                 
                 // Hide verification banner
                 if (emailVerificationBanner) emailVerificationBanner.hidden = true;
@@ -338,7 +339,8 @@ class AuthService {
                 // User is logged in but email is not verified
                 authButton.textContent = this.getUserDisplayName() + ' (verifica email)';
                 authButton.className = 'auth-button logged-in unverified';
-                if (userMenu) userMenu.hidden = false;
+                // Keep user menu hidden by default - user must click to open it
+                if (userMenu) userMenu.hidden = true;
                 
                 // Show verification banner
                 if (emailVerificationBanner) {
