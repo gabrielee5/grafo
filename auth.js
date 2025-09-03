@@ -566,8 +566,18 @@ class AuthModalManager {
 
     showFieldError(fieldId, message) {
         const field = document.getElementById(fieldId);
-        const errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
-                           document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        let errorElement;
+        
+        // Handle sign up field error IDs correctly
+        if (fieldId === 'signUpEmail') {
+            errorElement = document.getElementById('signup-email-error');
+        } else if (fieldId === 'signUpPassword') {
+            errorElement = document.getElementById('signup-password-error');
+        } else {
+            // Handle sign in fields and fallback
+            errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
+                          document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        }
         
         if (field) field.classList.add('invalid');
         if (errorElement) errorElement.textContent = message;
@@ -575,8 +585,18 @@ class AuthModalManager {
 
     clearFieldError(fieldId) {
         const field = document.getElementById(fieldId);
-        const errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
-                           document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        let errorElement;
+        
+        // Handle sign up field error IDs correctly
+        if (fieldId === 'signUpEmail') {
+            errorElement = document.getElementById('signup-email-error');
+        } else if (fieldId === 'signUpPassword') {
+            errorElement = document.getElementById('signup-password-error');
+        } else {
+            // Handle sign in fields and fallback
+            errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
+                          document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        }
         
         if (field) field.classList.remove('invalid');
         if (errorElement) errorElement.textContent = '';
