@@ -8,9 +8,16 @@ class AuthService {
 
     async initializeFirebase() {
         try {
-            // Initialize Firebase
+            // Load Firebase configuration from backend
+            if (!window.configLoader) {
+                throw new Error('Configuration loader not available');
+            }
+
+            const firebaseConfig = await window.configLoader.loadFirebaseConfig();
+            
+            // Initialize Firebase with loaded configuration
             if (firebase.apps.length === 0) {
-                firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+                firebase.initializeApp(firebaseConfig);
             }
             
             this.auth = firebase.auth();
@@ -30,6 +37,13 @@ class AuthService {
             
         } catch (error) {
             console.error('Firebase initialization error:', error);
+            // Show user-friendly error message
+            const authButton = document.getElementById('authButton');
+            if (authButton) {
+                authButton.textContent = 'Auth unavailable';
+                authButton.disabled = true;
+                authButton.title = 'Authentication service is currently unavailable. Please ensure the backend server is running.';
+            }
             // App should still work without auth if Firebase fails
         }
     }
@@ -267,16 +281,40 @@ class AuthService {
                 return;
             }
 
-            historyList.innerHTML = history.map(item => `
-                <div class="history-item">
-                    <div class="history-item-date">
-                        ${new Date(item.timestamp?.toDate?.() || item.timestamp).toLocaleDateString('it-IT')}
-                    </div>
-                    <div class="history-item-instructions">
-                        ${item.instructions || 'Nessuna istruzione'}
-                    </div>
-                </div>
-            `).join('');
+            // Clear existing content
+            historyList.innerHTML = '';
+
+            // Create history items safely without XSS vulnerability
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+
+                // Create date element
+                const dateElement = document.createElement('div');
+                dateElement.className = 'history-item-date';
+                const date = new Date(item.timestamp?.toDate?.() || item.timestamp);
+                dateElement.textContent = date.toLocaleDateString('it-IT');
+
+                // Create instructions element with safe text content
+                const instructionsElement = document.createElement('div');
+                instructionsElement.className = 'history-item-instructions';
+                
+                // Use SecurityUtils to safely set content
+                if (window.SecurityUtils) {
+                    SecurityUtils.safeSetTextContent(
+                        instructionsElement, 
+                        item.instructions || 'Nessuna istruzione',
+                        { maxLength: 200, allowNewlines: false }
+                    );
+                } else {
+                    // Fallback if SecurityUtils not loaded
+                    instructionsElement.textContent = (item.instructions || 'Nessuna istruzione').substring(0, 200);
+                }
+
+                historyItem.appendChild(dateElement);
+                historyItem.appendChild(instructionsElement);
+                historyList.appendChild(historyItem);
+            });
             
         } catch (error) {
             console.error('Error loading history UI:', error);
@@ -303,12 +341,25 @@ class AuthService {
 
     // Utility methods
     isEmailValid(email) {
+        // Use SecurityUtils if available, otherwise fallback to simple check
+        if (window.SecurityUtils) {
+            return SecurityUtils.isValidEmail(email);
+        }
+        
+        // Fallback validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        return typeof email === 'string' && emailRegex.test(email) && email.length <= 254;
     }
 
     isPasswordValid(password) {
-        return password && password.length >= 6;
+        // Use SecurityUtils if available for enhanced validation
+        if (window.SecurityUtils) {
+            const validation = SecurityUtils.validatePassword(password);
+            return validation.isValid;
+        }
+        
+        // Fallback validation
+        return password && typeof password === 'string' && password.length >= 6 && password.length <= 128;
     }
 }
 

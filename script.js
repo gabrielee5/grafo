@@ -12,8 +12,6 @@ class SignatureCleaner {
         this.debugVisible = false;
         
         // Load configuration
-        this.apiKey = CONFIG.GEMINI_API_KEY;
-        this.apiUrl = CONFIG.GEMINI_API_URL;
         this.maxFileSize = CONFIG.MAX_FILE_SIZE;
         this.supportedFormats = CONFIG.SUPPORTED_FORMATS;
         
@@ -21,11 +19,8 @@ class SignatureCleaner {
         this.isSignUpMode = false;
         this.appInitializing = true; // Prevent modal from showing during initialization
         
-        // Validate configuration
-        if (this.apiKey === 'YOUR_GEMINI_API_KEY_HERE' || !this.apiKey) {
-            this.showStatus('Configura la tua chiave API Gemini in config.js', 'error');
-            this.processButton.disabled = true;
-        }
+        // Check backend connectivity
+        this.checkBackendConnection();
         
         // Force hide modal immediately
         this.forceHideModal();
@@ -59,6 +54,25 @@ class SignatureCleaner {
         
         // Zoom control elements
         this.initializeZoomElements();
+    }
+
+    async checkBackendConnection() {
+        try {
+            const healthUrl = window.configLoader?.getHealthUrl() || `${CONFIG.API_BASE_URL}/health`;
+            const response = await fetch(healthUrl);
+            
+            if (response.ok) {
+                const health = await response.json();
+                console.log('✅ Backend server connected:', health);
+            } else {
+                throw new Error(`Health check failed: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ Backend server connection failed:', error);
+            this.showStatus('Backend server non disponibile. Avvia il server per usare l\'app.', 'error');
+            this.processButton.disabled = true;
+            this.processButton.title = 'Backend server not available. Please start the server on port 3001.';
+        }
     }
 
     setupEventListeners() {
@@ -393,27 +407,22 @@ class SignatureCleaner {
         }
     }
 
-    // Translation function using Gemini
+    // Translation function - temporarily simplified until backend text API is added
     async translateToEnglish(italianText) {
         const translationStep = this.addWorkflowStep({
-            title: 'Traduzione Italiano → Inglese',
+            title: 'Traduzione Italiano → Inglese (Saltata)',
             status: 'in-progress',
             startTime: new Date()
         });
 
         try {
-            const translationPrompt = `Translate this Italian text to English, preserving technical terminology related to handwriting analysis and graphology: "${italianText}"
-
-Return only the English translation, no additional text.`;
-
-            this.updateWorkflowStep(translationStep.id, { prompt: translationPrompt });
-
-            const response = await this.callGeminiTextAPI(translationPrompt);
-            const result = response.trim();
+            // For now, skip translation and use Italian text directly
+            // TODO: Add text translation endpoint to backend server
+            const result = italianText; // Use original Italian text
             
             this.updateWorkflowStep(translationStep.id, {
                 status: 'completed',
-                response: result,
+                response: 'Traduzione saltata - usando testo italiano direttamente',
                 endTime: new Date()
             });
 
@@ -430,33 +439,22 @@ Return only the English translation, no additional text.`;
         }
     }
 
-    // Prompt enhancement function
+    // Prompt enhancement function - temporarily simplified until backend text API is added
     async enhancePrompt(translatedText) {
         const enhancementStep = this.addWorkflowStep({
-            title: 'Miglioramento Prompt Tecnico',
+            title: 'Miglioramento Prompt (Saltato)',
             status: 'in-progress',
             startTime: new Date()
         });
 
         try {
-            const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
-
-Focus on:
-- Image cleaning and noise reduction
-- Contrast and clarity improvements
-- Preservation of authentic handwriting characteristics
-- Technical specifications for signature enhancement
-
-Return only the enhanced prompt, no additional text.`;
-
-            this.updateWorkflowStep(enhancementStep.id, { prompt: enhancementPrompt });
-
-            const response = await this.callGeminiTextAPI(enhancementPrompt);
-            const result = response.trim();
+            // For now, skip enhancement and use original text
+            // TODO: Add text enhancement endpoint to backend server
+            const result = translatedText; // Use original text
             
             this.updateWorkflowStep(enhancementStep.id, {
                 status: 'completed',
-                response: result,
+                response: 'Miglioramento saltato - usando testo originale',
                 endTime: new Date()
             });
 
@@ -515,73 +513,63 @@ Return only the enhanced prompt, no additional text.`;
 
     async callGeminiAPI(base64Image, prompt) {
         try {
-            const requestBody = {
-                contents: [{
-                    parts: [
-                        {
-                            text: prompt
-                        },
-                        {
-                            inlineData: {
-                                mimeType: this.currentImageFile.type,
-                                data: base64Image
-                            }
-                        }
-                    ]
-                }]
-            };
+            // Prepare form data for multipart upload
+            const formData = new FormData();
+            
+            // Convert base64 back to file for upload
+            const binaryData = atob(base64Image);
+            const bytes = new Uint8Array(binaryData.length);
+            for (let i = 0; i < binaryData.length; i++) {
+                bytes[i] = binaryData.charCodeAt(i);
+            }
+            
+            const imageBlob = new Blob([bytes], { type: this.currentImageFile.type });
+            formData.append('image', imageBlob, this.currentImageFile.name);
+            formData.append('instructions', prompt);
 
-            const response = await fetch(this.apiUrl, {
+            // Get the backend API URL
+            const processUrl = window.configLoader?.getProcessImageUrl() || `${CONFIG.API_BASE_URL}/process-image`;
+
+            const response = await fetch(processUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': this.apiKey,
-                },
-                body: JSON.stringify(requestBody)
+                body: formData
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
+                throw new Error(errorData.error || `API request failed: ${response.status}`);
             }
 
             const data = await response.json();
             
-            // Debug: Log the full API response
-            console.log('Gemini API Response:', JSON.stringify(data, null, 2));
+            // Debug: Log the API response
+            console.log('Backend API Response:', data);
             
-            // Extract generated image from response
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-                const parts = data.candidates[0].content.parts;
+            if (data.success && data.imageData) {
+                // The backend returns a data URL (data:image/...;base64,...)
+                // Convert it to blob for consistent handling
+                const response = await fetch(data.imageData);
+                const blob = await response.blob();
                 
-                // Look for image data in the response parts
-                for (const part of parts) {
-                    if (part.inlineData && part.inlineData.data) {
-                        // Convert base64 data to blob
-                        const imageData = part.inlineData.data;
-                        const mimeType = part.inlineData.mimeType || 'image/png';
-                        
-                        const binaryData = atob(imageData);
-                        const bytes = new Uint8Array(binaryData.length);
-                        for (let i = 0; i < binaryData.length; i++) {
-                            bytes[i] = binaryData.charCodeAt(i);
-                        }
-                        
-                        const blob = new Blob([bytes], { type: mimeType });
-                        
-                        return {
-                            success: true,
-                            imageData: blob
-                        };
-                    }
-                }
+                return {
+                    success: true,
+                    imageData: blob
+                };
+            } else {
+                throw new Error(data.error || 'No processed image received from server');
             }
-            
-            // If no image found in response, fallback to simulation
-            console.warn('No image generated by API, falling back to simulation');
-            return this.simulateImageProcessing();
 
         } catch (error) {
+            console.error('Backend API error:', error);
+            
+            // Check if error is network-related
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                return {
+                    success: false,
+                    error: 'Unable to connect to the backend server. Please ensure the server is running on port 3001.'
+                };
+            }
+            
             return {
                 success: false,
                 error: error.message

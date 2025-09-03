@@ -105,3 +105,9 @@ public
 # other
 config-example.js
 docs/
+
+# Backend server secrets
+server/.env
+server/node_modules/
+server/logs/
+server/*.log
