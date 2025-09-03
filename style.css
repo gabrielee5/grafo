@@ -913,14 +913,6 @@ body {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-group input:invalid {
-    border-color: #ef4444;
-}
-
-.form-group input:invalid:focus {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
 
 .form-group input.invalid {
     border-color: #ef4444;
