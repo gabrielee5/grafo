@@ -942,12 +942,25 @@ body {
 }
 
 .auth-footer a {
-    color: #667eea;
+    color: #667eea !important;
     text-decoration: none;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .auth-footer a:hover {
+    text-decoration: underline;
+    color: #5a67d8 !important;
+}
+
+/* Specific rule for auth toggle link to ensure visibility */
+#authToggleLink {
+    color: #667eea !important;
+    cursor: pointer;
+}
+
+#authToggleLink:hover {
+    color: #5a67d8 !important;
     text-decoration: underline;
 }
 
