@@ -6,6 +6,18 @@ class AuthService {
         this.initializeFirebase();
     }
 
+    // Constants for better error handling
+    static ERROR_CODES = {
+        WEAK_PASSWORD: 'auth/weak-password',
+        EMAIL_ALREADY_IN_USE: 'auth/email-already-in-use',
+        USER_NOT_FOUND: 'auth/user-not-found',
+        WRONG_PASSWORD: 'auth/wrong-password',
+        INVALID_EMAIL: 'auth/invalid-email',
+        USER_DISABLED: 'auth/user-disabled',
+        TOO_MANY_REQUESTS: 'auth/too-many-requests',
+        NETWORK_REQUEST_FAILED: 'auth/network-request-failed'
+    };
+
     async initializeFirebase() {
         try {
             // Load Firebase configuration from backend
@@ -224,7 +236,7 @@ class AuthService {
         }
     }
 
-    // UI management
+    // Simplified UI management - modals are now handled by AuthModalManager
     updateAuthUI(user) {
         const authButton = document.getElementById('authButton');
         const userMenu = document.getElementById('userMenu');
@@ -237,11 +249,9 @@ class AuthService {
             authButton.className = 'auth-button logged-in';
             if (userMenu) userMenu.hidden = false;
             
-            // Make sure auth modal is hidden when user logs in
-            const authModal = document.getElementById('authModal');
-            if (authModal) {
-                authModal.setAttribute('hidden', '');
-                authModal.style.display = 'none';
+            // Hide any open auth modals
+            if (window.authModalManager) {
+                window.authModalManager.hideAllModals();
             }
             
             // Enable process button
@@ -262,11 +272,9 @@ class AuthService {
             authButton.className = 'auth-button';
             if (userMenu) userMenu.hidden = true;
             
-            // Make sure auth modal is hidden for anonymous users too
-            const authModal = document.getElementById('authModal');
-            if (authModal) {
-                authModal.setAttribute('hidden', '');
-                authModal.style.display = 'none';
+            // Hide any open auth modals
+            if (window.authModalManager) {
+                window.authModalManager.hideAllModals();
             }
             
             // Update process button to show authentication requirement
@@ -334,46 +342,390 @@ class AuthService {
         }
     }
 
-    // Error message translation
+    // Enhanced error message translation with user guidance
     getItalianErrorMessage(errorCode) {
         const errorMessages = {
-            'auth/user-not-found': 'Utente non trovato',
-            'auth/wrong-password': 'Password errata',
-            'auth/email-already-in-use': 'Email già in uso',
-            'auth/weak-password': 'Password troppo debole',
-            'auth/invalid-email': 'Email non valida',
-            'auth/user-disabled': 'Account disabilitato',
-            'auth/too-many-requests': 'Troppi tentativi. Riprova più tardi',
-            'auth/network-request-failed': 'Errore di connessione',
-            'auth/internal-error': 'Errore interno del server'
+            [AuthService.ERROR_CODES.USER_NOT_FOUND]: 'Email non registrata. Verifica l\'indirizzo o registrati.',
+            [AuthService.ERROR_CODES.WRONG_PASSWORD]: 'Password errata. Riprova o reimposta la password.',
+            [AuthService.ERROR_CODES.EMAIL_ALREADY_IN_USE]: 'Questa email è già registrata. Prova ad accedere.',
+            [AuthService.ERROR_CODES.WEAK_PASSWORD]: 'Password troppo debole. Usa almeno 6 caratteri.',
+            [AuthService.ERROR_CODES.INVALID_EMAIL]: 'Formato email non valido.',
+            [AuthService.ERROR_CODES.USER_DISABLED]: 'Account disabilitato. Contatta il supporto.',
+            [AuthService.ERROR_CODES.TOO_MANY_REQUESTS]: 'Troppi tentativi. Riprova tra qualche minuto.',
+            [AuthService.ERROR_CODES.NETWORK_REQUEST_FAILED]: 'Errore di connessione. Verifica la rete.',
+            'auth/internal-error': 'Errore interno del server. Riprova più tardi.'
         };
         
-        return errorMessages[errorCode] || 'Errore di autenticazione';
+        return errorMessages[errorCode] || 'Errore di autenticazione. Riprova.';
     }
 
-    // Utility methods
-    isEmailValid(email) {
-        // Use SecurityUtils if available, otherwise fallback to simple check
-        if (window.SecurityUtils) {
-            return SecurityUtils.isValidEmail(email);
+    // Enhanced validation with specific feedback
+    validateEmail(email) {
+        if (!email || typeof email !== 'string') {
+            return { isValid: false, error: 'Email richiesta' };
         }
         
-        // Fallback validation
+        if (email.length > 254) {
+            return { isValid: false, error: 'Email troppo lunga' };
+        }
+        
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return typeof email === 'string' && emailRegex.test(email) && email.length <= 254;
+        if (!emailRegex.test(email)) {
+            return { isValid: false, error: 'Formato email non valido' };
+        }
+        
+        return { isValid: true };
+    }
+
+    validatePassword(password) {
+        if (!password || typeof password !== 'string') {
+            return { isValid: false, error: 'Password richiesta' };
+        }
+        
+        if (password.length < 6) {
+            return { isValid: false, error: 'Password troppo corta (minimo 6 caratteri)' };
+        }
+        
+        if (password.length > 128) {
+            return { isValid: false, error: 'Password troppo lunga (massimo 128 caratteri)' };
+        }
+        
+        return { isValid: true };
+    }
+
+    // Legacy utility methods for backward compatibility
+    isEmailValid(email) {
+        return this.validateEmail(email).isValid;
     }
 
     isPasswordValid(password) {
-        // Use SecurityUtils if available for enhanced validation
-        if (window.SecurityUtils) {
-            const validation = SecurityUtils.validatePassword(password);
-            return validation.isValid;
-        }
-        
-        // Fallback validation
-        return password && typeof password === 'string' && password.length >= 6 && password.length <= 128;
+        return this.validatePassword(password).isValid;
     }
 }
 
-// Create global auth service instance
+// Authentication Modal Manager - handles the improved modal system
+class AuthModalManager {
+    constructor() {
+        this.signInModal = document.getElementById('signInModal');
+        this.signUpModal = document.getElementById('signUpModal');
+        this.activeModal = null;
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Sign In Modal Events
+        const closeSignInButton = document.getElementById('closeSignInButton');
+        const signInForm = document.getElementById('signInForm');
+        const showSignUpLink = document.getElementById('showSignUpLink');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+
+        // Sign Up Modal Events  
+        const closeSignUpButton = document.getElementById('closeSignUpButton');
+        const signUpForm = document.getElementById('signUpForm');
+        const showSignInLink = document.getElementById('showSignInLink');
+
+        // Close button events
+        if (closeSignInButton) {
+            closeSignInButton.addEventListener('click', () => this.hideSignInModal());
+        }
+        if (closeSignUpButton) {
+            closeSignUpButton.addEventListener('click', () => this.hideSignUpModal());
+        }
+
+        // Form submission events
+        if (signInForm) {
+            signInForm.addEventListener('submit', (e) => this.handleSignInSubmit(e));
+        }
+        if (signUpForm) {
+            signUpForm.addEventListener('submit', (e) => this.handleSignUpSubmit(e));
+        }
+
+        // Modal switching events
+        if (showSignUpLink) {
+            showSignUpLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToSignUp();
+            });
+        }
+        if (showSignInLink) {
+            showSignInLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToSignIn();
+            });
+        }
+
+        // Forgot password
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => this.handleForgotPassword(e));
+        }
+
+        // Password visibility toggles
+        this.setupPasswordToggles();
+
+        // Click outside to close
+        this.signInModal?.addEventListener('click', (e) => {
+            if (e.target === this.signInModal) this.hideSignInModal();
+        });
+        this.signUpModal?.addEventListener('click', (e) => {
+            if (e.target === this.signUpModal) this.hideSignUpModal();
+        });
+
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.activeModal) {
+                this.hideAllModals();
+            }
+        });
+    }
+
+    setupPasswordToggles() {
+        const toggles = document.querySelectorAll('.password-toggle');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const passwordInput = toggle.previousElementSibling;
+                if (passwordInput) {
+                    const isVisible = passwordInput.type === 'text';
+                    passwordInput.type = isVisible ? 'password' : 'text';
+                    toggle.setAttribute('aria-label', isVisible ? 'Mostra password' : 'Nascondi password');
+                }
+            });
+        });
+    }
+
+    showSignInModal() {
+        if (!this.signInModal) {
+            return;
+        }
+        
+        this.hideAllModals();
+        this.signInModal.removeAttribute('hidden');
+        this.activeModal = 'signIn';
+        this.clearForm('signInForm');
+        
+        // Focus first input
+        setTimeout(() => {
+            const emailInput = document.getElementById('signInEmail');
+            if (emailInput) {
+                emailInput.focus();
+            }
+        }, 100);
+    }
+
+    showSignUpModal() {
+        this.hideAllModals();
+        this.signUpModal.removeAttribute('hidden');
+        this.activeModal = 'signUp';
+        this.clearForm('signUpForm');
+        
+        // Focus first input
+        setTimeout(() => {
+            const nameInput = document.getElementById('signUpName');
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
+
+    hideSignInModal() {
+        this.signInModal.setAttribute('hidden', '');
+        if (this.activeModal === 'signIn') this.activeModal = null;
+        this.clearForm('signInForm');
+    }
+
+    hideSignUpModal() {
+        this.signUpModal.setAttribute('hidden', '');
+        if (this.activeModal === 'signUp') this.activeModal = null;
+        this.clearForm('signUpForm');
+    }
+
+    hideAllModals() {
+        this.hideSignInModal();
+        this.hideSignUpModal();
+    }
+
+    switchToSignUp() {
+        this.hideSignInModal();
+        this.showSignUpModal();
+    }
+
+    switchToSignIn() {
+        this.hideSignUpModal();
+        this.showSignInModal();
+    }
+
+    clearForm(formId) {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.reset();
+            // Clear all error messages
+            const errors = form.querySelectorAll('.field-error');
+            errors.forEach(error => error.textContent = '');
+            // Clear invalid states
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => input.classList.remove('invalid'));
+        }
+    }
+
+    showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
+                           document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        
+        if (field) field.classList.add('invalid');
+        if (errorElement) errorElement.textContent = message;
+    }
+
+    clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const errorElement = document.getElementById(fieldId.replace(/([A-Z])/g, '-$1').toLowerCase() + '-error') || 
+                           document.getElementById(fieldId.replace('signIn', '').replace('signUp', '').toLowerCase() + '-error');
+        
+        if (field) field.classList.remove('invalid');
+        if (errorElement) errorElement.textContent = '';
+    }
+
+    setSubmitButtonState(formId, isLoading, text = null) {
+        const submitButton = document.getElementById(formId.replace('Form', 'SubmitButton'));
+        const buttonText = submitButton?.querySelector('.button-text');
+        const spinner = submitButton?.querySelector('.button-spinner');
+
+        if (submitButton) {
+            submitButton.disabled = isLoading;
+            if (buttonText && text) buttonText.textContent = text;
+            if (spinner) spinner.hidden = !isLoading;
+        }
+    }
+
+    async handleSignInSubmit(e) {
+        e.preventDefault();
+        if (!window.authService) return;
+
+        const email = document.getElementById('signInEmail').value.trim();
+        const password = document.getElementById('signInPassword').value;
+
+        // Clear previous errors
+        this.clearFieldError('signInEmail');
+        this.clearFieldError('signInPassword');
+
+        // Validate inputs
+        const emailValidation = window.authService.validateEmail(email);
+        const passwordValidation = window.authService.validatePassword(password);
+
+        if (!emailValidation.isValid) {
+            this.showFieldError('signInEmail', emailValidation.error);
+            return;
+        }
+
+        if (!passwordValidation.isValid) {
+            this.showFieldError('signInPassword', passwordValidation.error);
+            return;
+        }
+
+        this.setSubmitButtonState('signInForm', true, 'Accesso...');
+
+        try {
+            const result = await window.authService.signIn(email, password);
+            
+            if (result.success) {
+                this.hideSignInModal();
+                window.signatureCleaner?.showStatus('Accesso effettuato con successo!', 'success');
+            } else {
+                // Show error on appropriate field
+                if (result.error.includes('email') || result.error.includes('trovato')) {
+                    this.showFieldError('signInEmail', result.error);
+                } else {
+                    this.showFieldError('signInPassword', result.error);
+                }
+            }
+        } catch (error) {
+            this.showFieldError('signInPassword', 'Errore di connessione');
+        } finally {
+            this.setSubmitButtonState('signInForm', false, 'Accedi');
+        }
+    }
+
+    async handleSignUpSubmit(e) {
+        e.preventDefault();
+        if (!window.authService) return;
+
+        const name = document.getElementById('signUpName').value.trim();
+        const email = document.getElementById('signUpEmail').value.trim();
+        const password = document.getElementById('signUpPassword').value;
+
+        // Clear previous errors
+        this.clearFieldError('signUpEmail');
+        this.clearFieldError('signUpPassword');
+
+        // Validate inputs
+        const emailValidation = window.authService.validateEmail(email);
+        const passwordValidation = window.authService.validatePassword(password);
+
+        if (!emailValidation.isValid) {
+            this.showFieldError('signUpEmail', emailValidation.error);
+            return;
+        }
+
+        if (!passwordValidation.isValid) {
+            this.showFieldError('signUpPassword', passwordValidation.error);
+            return;
+        }
+
+        this.setSubmitButtonState('signUpForm', true, 'Registrazione...');
+
+        try {
+            const result = await window.authService.signUp(email, password, name);
+            
+            if (result.success) {
+                this.hideSignUpModal();
+                window.signatureCleaner?.showStatus('Registrazione completata con successo!', 'success');
+            } else {
+                // Show error on appropriate field
+                if (result.error.includes('email') || result.error.includes('uso')) {
+                    this.showFieldError('signUpEmail', result.error);
+                } else {
+                    this.showFieldError('signUpPassword', result.error);
+                }
+            }
+        } catch (error) {
+            this.showFieldError('signUpPassword', 'Errore di connessione');
+        } finally {
+            this.setSubmitButtonState('signUpForm', false, 'Crea Account');
+        }
+    }
+
+    async handleForgotPassword(e) {
+        e.preventDefault();
+        if (!window.authService) return;
+
+        const email = document.getElementById('signInEmail').value.trim();
+        
+        if (!email) {
+            this.showFieldError('signInEmail', 'Inserisci la tua email per il reset della password');
+            return;
+        }
+
+        const emailValidation = window.authService.validateEmail(email);
+        if (!emailValidation.isValid) {
+            this.showFieldError('signInEmail', emailValidation.error);
+            return;
+        }
+
+        try {
+            const result = await window.authService.resetPassword(email);
+            if (result.success) {
+                window.signatureCleaner?.showStatus(result.message, 'success');
+                this.hideSignInModal();
+            } else {
+                this.showFieldError('signInEmail', result.error);
+            }
+        } catch (error) {
+            this.showFieldError('signInEmail', 'Errore durante il reset della password');
+        }
+    }
+}
+
+// Create global instances
 window.authService = new AuthService();
+
+// Initialize AuthModalManager after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.authModalManager = new AuthModalManager();
+});

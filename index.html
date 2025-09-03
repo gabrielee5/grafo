@@ -168,46 +168,138 @@
         </footer>
     </div>
 
-    <!-- Authentication Modal -->
-    <div id="authModal" class="modal" hidden style="display: none !important; visibility: hidden !important;">
+    <!-- Sign In Modal -->
+    <div id="signInModal" class="auth-modal" hidden>
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Accedi</h2>
-                <button id="closeModalButton" class="close-btn">✕</button>
+                <h2>Benvenuto</h2>
+                <button id="closeSignInButton" class="close-btn" aria-label="Chiudi">✕</button>
             </div>
             <div class="modal-body">
-                <form id="authForm">
-                    <div class="form-group" id="nameGroup" hidden>
-                        <label for="displayName">Nome (opzionale)</label>
-                        <input type="text" id="displayName" placeholder="Il tuo nome">
+                <p class="modal-subtitle">Accedi al tuo account per continuare</p>
+                <form id="signInForm" novalidate>
+                    <div class="form-group">
+                        <label for="signInEmail">Email</label>
+                        <input 
+                            type="email" 
+                            id="signInEmail" 
+                            required 
+                            placeholder="la-tua-email@esempio.com"
+                            autocomplete="email"
+                            aria-describedby="email-error"
+                        >
+                        <div class="field-error" id="email-error" role="alert"></div>
                     </div>
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" required placeholder="la-tua-email@esempio.com">
+                        <label for="signInPassword">Password</label>
+                        <div class="password-input">
+                            <input 
+                                type="password" 
+                                id="signInPassword" 
+                                required 
+                                placeholder="La tua password"
+                                autocomplete="current-password"
+                                aria-describedby="password-error"
+                            >
+                            <button type="button" class="password-toggle" aria-label="Mostra password">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="field-error" id="password-error" role="alert"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" required placeholder="Almeno 6 caratteri">
-                    </div>
-                    <button type="submit" id="authSubmitButton" class="auth-submit-btn">Accedi</button>
+                    <button type="submit" class="auth-submit-btn" id="signInSubmitButton">
+                        <span class="button-text">Accedi</span>
+                        <div class="button-spinner" hidden></div>
+                    </button>
                 </form>
                 <div class="auth-footer">
-                    <p id="authToggleText">Non hai un account? <a href="#" id="authToggleLink">Registrati</a></p>
                     <p><a href="#" id="forgotPasswordLink">Password dimenticata?</a></p>
+                    <p class="switch-mode">Non hai un account? <a href="#" id="showSignUpLink">Registrati</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Immediate script to ensure modal is hidden -->
+    <!-- Sign Up Modal -->
+    <div id="signUpModal" class="auth-modal" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crea Account</h2>
+                <button id="closeSignUpButton" class="close-btn" aria-label="Chiudi">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-subtitle">Registrati per iniziare a usare il servizio</p>
+                <form id="signUpForm" novalidate>
+                    <div class="form-group">
+                        <label for="signUpName">Nome <span class="optional">(opzionale)</span></label>
+                        <input 
+                            type="text" 
+                            id="signUpName" 
+                            placeholder="Il tuo nome"
+                            autocomplete="given-name"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="signUpEmail">Email</label>
+                        <input 
+                            type="email" 
+                            id="signUpEmail" 
+                            required 
+                            placeholder="la-tua-email@esempio.com"
+                            autocomplete="email"
+                            aria-describedby="signup-email-error"
+                        >
+                        <div class="field-error" id="signup-email-error" role="alert"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signUpPassword">Password</label>
+                        <div class="password-input">
+                            <input 
+                                type="password" 
+                                id="signUpPassword" 
+                                required 
+                                placeholder="Almeno 6 caratteri"
+                                autocomplete="new-password"
+                                aria-describedby="signup-password-error signup-password-help"
+                            >
+                            <button type="button" class="password-toggle" aria-label="Mostra password">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="field-help" id="signup-password-help">Minimo 6 caratteri</div>
+                        <div class="field-error" id="signup-password-error" role="alert"></div>
+                    </div>
+                    <button type="submit" class="auth-submit-btn" id="signUpSubmitButton">
+                        <span class="button-text">Crea Account</span>
+                        <div class="button-spinner" hidden></div>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p class="switch-mode">Hai già un account? <a href="#" id="showSignInLink">Accedi</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Immediate script to ensure modals are hidden -->
     <script>
-        // Force hide modal immediately, before any other scripts run
+        // Force hide auth modals immediately, before any other scripts run
         (function() {
-            const modal = document.getElementById('authModal');
-            if (modal) {
-                modal.setAttribute('hidden', '');
-                modal.style.display = 'none';
-                modal.style.visibility = 'hidden';
+            const signInModal = document.getElementById('signInModal');
+            const signUpModal = document.getElementById('signUpModal');
+            if (signInModal) {
+                signInModal.setAttribute('hidden', '');
+                signInModal.style.display = 'none';
+            }
+            if (signUpModal) {
+                signUpModal.setAttribute('hidden', '');
+                signUpModal.style.display = 'none';
             }
         })();
     </script>
