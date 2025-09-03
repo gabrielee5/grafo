@@ -333,7 +333,7 @@ class AuthService {
                 if (avatarInitials) avatarInitials.textContent = initials;
                 if (authButtonText) authButtonText.textContent = displayName;
                 if (authButtonSubtitle) {
-                    // authButtonSubtitle.textContent = 'Account verificato';
+                    authButtonSubtitle.textContent = 'Account verificato';
                     authButtonSubtitle.hidden = false;
                 }
                 
