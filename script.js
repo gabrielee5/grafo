@@ -39,7 +39,7 @@ class SignatureCleaner {
         this.editFurtherButton = document.getElementById('editFurtherButton');
         this.downloadButton = document.getElementById('downloadButton');
         this.resetButton = document.getElementById('resetButton');
-        this.statusMessage = document.getElementById('statusMessage');
+        this.toastContainer = document.getElementById('toastContainer');
         this.debugToggle = document.getElementById('debugToggle');
         this.workflowStepsElement = document.getElementById('workflowSteps');
         this.workflowLadder = document.getElementById('workflowLadder');
@@ -782,18 +782,94 @@ Return only the enhanced prompt, no additional text.`;
     }
 
     showStatus(message, type = 'info') {
-        this.statusMessage.textContent = message;
-        this.statusMessage.className = `status-message ${type}`;
-        this.statusMessage.style.display = 'block';
-        
-        // Auto-hide success messages after 5 seconds
-        if (type === 'success') {
-            setTimeout(() => this.hideStatus(), 5000);
-        }
+        this.showToast(message, type);
     }
 
     hideStatus() {
-        this.statusMessage.style.display = 'none';
+        // Legacy method - kept for compatibility
+        // Individual toasts now handle their own dismissal
+    }
+
+    showToast(message, type = 'info', duration = null) {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // Set default duration based on type
+        if (duration === null) {
+            duration = type === 'error' ? 8000 : type === 'success' ? 5000 : 6000;
+        }
+
+        // Get icon for toast type
+        const icon = this.getToastIcon(type);
+        
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-message">${this.escapeHtml(message)}</div>
+            </div>
+            <button class="toast-close" aria-label="Chiudi notifica">✕</button>
+        `;
+
+        // Add to container
+        this.toastContainer.appendChild(toast);
+
+        // Close button functionality
+        const closeButton = toast.querySelector('.toast-close');
+        closeButton.addEventListener('click', () => {
+            this.removeToast(toast);
+        });
+
+        // Show toast with animation
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        // Auto-remove after duration
+        if (duration > 0) {
+            setTimeout(() => {
+                this.removeToast(toast);
+            }, duration);
+        }
+
+        return toast;
+    }
+
+    removeToast(toast) {
+        if (!toast || !toast.parentNode) return;
+        
+        toast.classList.add('hide');
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300); // Match CSS transition duration
+    }
+
+    getToastIcon(type) {
+        const icons = {
+            success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                      </svg>`,
+            error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>`,
+            info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                     <circle cx="12" cy="12" r="10"></circle>
+                     <path d="M12,16v-4"></path>
+                     <path d="M12,8h.01"></path>
+                   </svg>`,
+            warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>`
+        };
+        return icons[type] || icons.info;
     }
 
     fileToBase64(file) {
