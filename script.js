@@ -473,7 +473,7 @@ Return only the English translation, no additional text.`;
         });
 
         try {
-            // Original enhancement prompt (for reference)
+            // Original enhancement prompt
             const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
 
 Focus on:
