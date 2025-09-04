@@ -2,6 +2,144 @@
  * Security utilities for input sanitization and validation
  */
 
+/**
+ * EXIF/Metadata Stripping Utility
+ * Removes all metadata from images for privacy protection
+ */
+class ImagePrivacyUtils {
+    /**
+     * Strips all EXIF/metadata from an image file
+     * @param {File} file - The image file to process
+     * @returns {Promise<File>} - Clean image file without metadata
+     */
+    static async stripMetadata(file) {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = () => {
+                try {
+                    // Set canvas size to match image
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    
+                    // Draw image to canvas (this strips all metadata)
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert back to file
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // Create new file with same name but no metadata
+                            const cleanFile = new File([blob], file.name, {
+                                type: file.type,
+                                lastModified: Date.now()
+                            });
+                            resolve(cleanFile);
+                        } else {
+                            reject(new Error('Failed to create clean image'));
+                        }
+                    }, file.type, 0.95); // High quality
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            
+            img.onerror = () => {
+                reject(new Error('Failed to load image for metadata stripping'));
+            };
+            
+            // Load image
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    /**
+     * Checks if a file contains potentially sensitive metadata
+     * @param {File} file - The image file to check
+     * @returns {Promise<Object>} - Metadata analysis result
+     */
+    static async analyzeMetadata(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const arrayBuffer = e.target.result;
+                const view = new DataView(arrayBuffer);
+                
+                let hasExif = false;
+                let hasGPS = false;
+                let estimatedMetadataSize = 0;
+                
+                try {
+                    // Check for EXIF marker (0xFFE1)
+                    for (let i = 0; i < Math.min(arrayBuffer.byteLength - 4, 65536); i++) {
+                        if (view.getUint16(i, false) === 0xFFE1) {
+                            hasExif = true;
+                            const segmentLength = view.getUint16(i + 2, false);
+                            estimatedMetadataSize += segmentLength;
+                            
+                            // Check for GPS data within EXIF
+                            const segment = new Uint8Array(arrayBuffer.slice(i, i + segmentLength));
+                            const segmentStr = String.fromCharCode.apply(null, segment);
+                            if (segmentStr.includes('GPS')) {
+                                hasGPS = true;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error analyzing metadata:', error);
+                }
+                
+                resolve({
+                    hasMetadata: hasExif,
+                    hasGPS: hasGPS,
+                    originalSize: file.size,
+                    estimatedMetadataSize: estimatedMetadataSize,
+                    format: file.type
+                });
+            };
+            
+            reader.onerror = () => {
+                resolve({
+                    hasMetadata: false,
+                    hasGPS: false,
+                    originalSize: file.size,
+                    estimatedMetadataSize: 0,
+                    format: file.type
+                });
+            };
+            
+            // Only read first 64KB to check for metadata
+            const chunk = file.slice(0, 65536);
+            reader.readAsArrayBuffer(chunk);
+        });
+    }
+
+    /**
+     * Formats metadata analysis for user display
+     * @param {Object} analysis - Result from analyzeMetadata
+     * @returns {string} - User-friendly description
+     */
+    static formatPrivacyReport(analysis) {
+        if (!analysis.hasMetadata) {
+            return "✅ Nessun metadato rilevato";
+        }
+        
+        let report = "🔒 Metadati rimossi per privacy";
+        if (analysis.hasGPS) {
+            report += " (inclusi dati GPS)";
+        }
+        
+        if (analysis.estimatedMetadataSize > 0) {
+            const sizeSaved = (analysis.estimatedMetadataSize / 1024).toFixed(1);
+            report += ` • ${sizeSaved}KB risparmiati`;
+        }
+        
+        return report;
+    }
+}
+
 class SecurityUtils {
     /**
      * Escapes HTML special characters to prevent XSS attacks

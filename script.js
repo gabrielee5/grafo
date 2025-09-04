@@ -180,7 +180,7 @@ class SignatureCleaner {
         }
     }
 
-    handleFileSelect(file) {
+    async handleFileSelect(file) {
         if (!file) return;
         
         // Validate file type
@@ -196,26 +196,65 @@ class SignatureCleaner {
             return;
         }
 
-        this.currentImageFile = file;
-        this.showImagePreview(file);
-        this.processButton.disabled = false;
-        this.uploadArea.classList.add('has-image');
-        
-        // Update upload area to show selected file
-        const placeholder = this.uploadArea.querySelector('.upload-placeholder');
-        placeholder.innerHTML = `
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14,2 14,8 20,8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10,9 9,9 8,9"></polyline>
-            </svg>
-            <h3>Image Selected: ${file.name}</h3>
-            <p>Click to select a different image</p>
-        `;
+        // Show processing indicator for privacy features
+        this.showStatus('Analisi privacy in corso...', 'info');
 
-        this.showStatus('Immagine caricata con successo. Pronto per elaborare.', 'success');
+        try {
+            // Analyze metadata before stripping
+            const metadataAnalysis = await ImagePrivacyUtils.analyzeMetadata(file);
+            
+            // Strip metadata for privacy
+            const cleanFile = await ImagePrivacyUtils.stripMetadata(file);
+            
+            // Show privacy report
+            const privacyReport = ImagePrivacyUtils.formatPrivacyReport(metadataAnalysis);
+            this.showStatus(privacyReport, 'success');
+
+            this.currentImageFile = cleanFile;
+            this.originalImageFile = file; // Keep original for size comparison
+            this.metadataAnalysis = metadataAnalysis;
+            
+            this.showImagePreview(cleanFile);
+            this.processButton.disabled = false;
+            this.uploadArea.classList.add('has-image');
+            
+            // Update upload area to show selected file with privacy info
+            const placeholder = this.uploadArea.querySelector('.upload-placeholder');
+            const sizeDiff = file.size - cleanFile.size;
+            const sizeDiffText = sizeDiff > 0 ? ` (${this.formatFileSize(sizeDiff)} metadati rimossi)` : '';
+            
+            placeholder.innerHTML = `
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <h3>🔒 ${cleanFile.name}</h3>
+                <p>Privacy protetta • Click per cambiare immagine</p>
+                ${metadataAnalysis.hasMetadata ? `<small class="privacy-note">Metadati rimossi${sizeDiffText}</small>` : '<small class="privacy-note">Nessun metadato rilevato</small>'}
+            `;
+
+        } catch (error) {
+            console.error('Privacy processing failed:', error);
+            // Fallback to original file if stripping fails
+            this.currentImageFile = file;
+            this.showImagePreview(file);
+            this.processButton.disabled = false;
+            this.uploadArea.classList.add('has-image');
+            
+            const placeholder = this.uploadArea.querySelector('.upload-placeholder');
+            placeholder.innerHTML = `
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+                <h3>Image Selected: ${file.name}</h3>
+                <p>Click to select a different image</p>
+            `;
+            
+            this.showStatus('⚠️ Protezione privacy non disponibile - immagine caricata normalmente', 'warning');
+        }
     }
 
     showImagePreview(file) {
@@ -227,9 +266,12 @@ class SignatureCleaner {
             // Set preview image
             this.previewImage.src = e.target.result;
             
-            // Set file info
+            // Set file info with privacy status
             this.previewFileName.textContent = file.name;
-            this.previewFileSize.textContent = this.formatFileSize(file.size);
+            const sizeText = this.formatFileSize(file.size);
+            const privacyText = this.metadataAnalysis ? 
+                (this.metadataAnalysis.hasMetadata ? ' • 🔒 Privacy protetta' : ' • ✅ Nessun metadato') : '';
+            this.previewFileSize.textContent = sizeText + privacyText;
             
             // Also set original image for results section
             this.originalImage.src = e.target.result;
@@ -701,7 +743,7 @@ Return only the enhanced prompt, no additional text.`;
         this.customInstructions.scrollIntoView({ behavior: 'smooth' });
     }
 
-    downloadImage() {
+    async downloadImage() {
         if (!this.processedImageBlob) return;
         
         // Generate default filename
@@ -718,17 +760,45 @@ Return only the enhanced prompt, no additional text.`;
         // Ensure filename has .png extension
         const finalFilename = filename.endsWith('.png') ? filename : filename + '.png';
         
-        const url = URL.createObjectURL(this.processedImageBlob);
-        const a = document.createElement('a');
-        
-        a.href = url;
-        a.download = finalFilename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        this.showStatus('Immagine migliorata scaricata con successo!', 'success');
+        try {
+            // Create a temporary file from blob to strip any remaining metadata
+            const tempFile = new File([this.processedImageBlob], finalFilename, {
+                type: 'image/png',
+                lastModified: Date.now()
+            });
+            
+            // Strip metadata from processed image before download
+            const cleanProcessedFile = await ImagePrivacyUtils.stripMetadata(tempFile);
+            const cleanBlob = new Blob([cleanProcessedFile], { type: 'image/png' });
+            
+            const url = URL.createObjectURL(cleanBlob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = finalFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showStatus('🔒 Immagine migliorata scaricata (privacy protetta)!', 'success');
+            
+        } catch (error) {
+            console.error('Error stripping metadata from download:', error);
+            
+            // Fallback to regular download if stripping fails
+            const url = URL.createObjectURL(this.processedImageBlob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = finalFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            this.showStatus('Immagine migliorata scaricata con successo!', 'success');
+        }
     }
 
     resetApp() {

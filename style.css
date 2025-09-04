@@ -156,6 +156,19 @@ body {
     background: #ecfdf5;
 }
 
+/* Privacy indicator styling */
+.privacy-note {
+    color: #059669;
+    font-weight: 500;
+    margin-top: 4px;
+    display: block;
+    font-size: 0.8rem;
+}
+
+.upload-area.has-image .privacy-note {
+    color: #0369a1;
+}
+
 .upload-placeholder {
     display: flex;
     flex-direction: column;
