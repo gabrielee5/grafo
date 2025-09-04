@@ -806,10 +806,14 @@ Return only the enhanced prompt, no additional text.`;
         // Create progress bar if auto-dismiss is enabled
         const progressBar = duration > 0 ? '<div class="toast-progress"></div>' : '';
         
+        // Check if message is very long and needs wrapping
+        const isLongMessage = message.length > 80;
+        const messageClass = isLongMessage ? 'toast-message long' : 'toast-message';
+        
         toast.innerHTML = `
             <div class="toast-content">
                 <div class="toast-icon">${icon}</div>
-                <div class="toast-message">${this.escapeHtml(message)}</div>
+                <div class="${messageClass}">${this.escapeHtml(message)}</div>
             </div>
             <button class="toast-close" aria-label="Chiudi notifica">✕</button>
             ${progressBar}
