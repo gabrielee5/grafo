@@ -473,7 +473,8 @@ Return only the English translation, no additional text.`;
         });
 
         try {
-            const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
+            // Original enhancement prompt (for reference)
+            const enhancementPromptOriginal = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
 
 Focus on:
 - Image cleaning and noise reduction
@@ -482,6 +483,22 @@ Focus on:
 - Technical specifications for signature enhancement
 
 Return only the enhanced prompt, no additional text.`;
+
+            // New detailed enhancement prompt, to be tested
+            const enhancementPrompt = `You are a professional prompt engineer for an AI image processing model. Your task is to generate a highly specific and technical prompt for cleaning and isolating handwritten signatures or text from a digital image, based on a user's request.
+
+The user's original request is: "${translatedText}"
+
+Your prompt must include the following specifications:
+- The core action is to isolate and remove the background.
+- The desired output is an image with a white background.
+- It must explicitly command the removal of common imperfections like smudges, stains, wrinkles, shadows, and any underlying typed or printed text.
+- The prompt should emphasize maintaining the authentic characteristics of the handwriting, such as line weight and texture.
+- The final output should be high-resolution and have sharp, high-contrast lines.
+
+You must also analyze the user's request for any specific instructions. If the user asks to "keep," "preserve," or "leave" a certain element (e.g., a color, a mark, a line), you must add an explicit instruction at the end of the prompt to ensure that element is not removed.
+
+Return only the final, enhanced prompt. Do not include any additional text, explanations, or conversational phrases.`;
 
             this.updateWorkflowStep(enhancementStep.id, { prompt: enhancementPrompt });
 
