@@ -803,13 +803,24 @@ Return only the enhanced prompt, no additional text.`;
         // Get icon for toast type
         const icon = this.getToastIcon(type);
         
+        // Create progress bar if auto-dismiss is enabled
+        const progressBar = duration > 0 ? '<div class="toast-progress"></div>' : '';
+        
         toast.innerHTML = `
             <div class="toast-content">
                 <div class="toast-icon">${icon}</div>
                 <div class="toast-message">${this.escapeHtml(message)}</div>
             </div>
             <button class="toast-close" aria-label="Chiudi notifica">✕</button>
+            ${progressBar}
         `;
+
+        // Handle toast stacking - limit to 3 toasts max
+        const existingToasts = this.toastContainer.children;
+        if (existingToasts.length >= 3) {
+            // Remove oldest toast
+            this.removeToast(existingToasts[0]);
+        }
 
         // Add to container
         this.toastContainer.appendChild(toast);
@@ -820,17 +831,51 @@ Return only the enhanced prompt, no additional text.`;
             this.removeToast(toast);
         });
 
-        // Show toast with animation
+        // Pause progress on hover
+        if (duration > 0) {
+            const progress = toast.querySelector('.toast-progress');
+            let timeoutId;
+            let startTime;
+            let remainingTime = duration;
+
+            const startProgress = () => {
+                if (progress && remainingTime > 0) {
+                    startTime = Date.now();
+                    progress.style.animationDuration = `${remainingTime}ms`;
+                    progress.classList.add('running');
+                    
+                    timeoutId = setTimeout(() => {
+                        this.removeToast(toast);
+                    }, remainingTime);
+                }
+            };
+
+            const pauseProgress = () => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    const elapsed = Date.now() - startTime;
+                    remainingTime = Math.max(0, remainingTime - elapsed);
+                    progress.classList.remove('running');
+                }
+            };
+
+            toast.addEventListener('mouseenter', pauseProgress);
+            toast.addEventListener('mouseleave', startProgress);
+
+            // Start initial progress
+            setTimeout(startProgress, 100);
+        }
+
+        // Show toast with animation and haptic feedback
         requestAnimationFrame(() => {
             toast.classList.add('show');
+            // Add subtle haptic feedback for supported devices
+            if ('vibrate' in navigator && type === 'error') {
+                navigator.vibrate([50, 30, 50]);
+            } else if ('vibrate' in navigator && type === 'success') {
+                navigator.vibrate(50);
+            }
         });
-
-        // Auto-remove after duration
-        if (duration > 0) {
-            setTimeout(() => {
-                this.removeToast(toast);
-            }, duration);
-        }
 
         return toast;
     }
