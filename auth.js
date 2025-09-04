@@ -52,9 +52,9 @@ class AuthService {
             // Show user-friendly error message
             const authButton = document.getElementById('authButton');
             if (authButton) {
-                authButton.textContent = 'Auth unavailable';
+                authButton.textContent = 'Non disponibile';
                 authButton.disabled = true;
-                authButton.title = 'Authentication service is currently unavailable. Please ensure the backend server is running.';
+                authButton.title = 'Servizio momentaneamente non disponibile. Please ensure the backend server is running.';
             }
             // App should still work without auth if Firebase fails
         }
