@@ -380,7 +380,7 @@ class AuthService {
                     // Update banner content
                     const bannerText = emailVerificationBanner.querySelector('.banner-text');
                     if (bannerText) {
-                        bannerText.textContent = 'Ti abbiamo inviato un\'email di verifica. Controlla la tua casella di posta per attivare tutte le funzionalità.';
+                        bannerText.textContent = 'Ti abbiamo inviato un\'email di verifica. Clicca il link per attivare tutte le funzionalità (vedi anche nello Spam).';
                     }
                 }
                 
