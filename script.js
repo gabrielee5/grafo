@@ -474,7 +474,7 @@ Return only the English translation, no additional text.`;
 
         try {
             // Original enhancement prompt (for reference)
-            const enhancementPromptOriginal = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
+            const enhancementPrompt = `Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
 
 Focus on:
 - Image cleaning and noise reduction
@@ -484,8 +484,8 @@ Focus on:
 
 Return only the enhanced prompt, no additional text.`;
 
-            // New detailed enhancement prompt, to be tested
-            const enhancementPrompt = `You are a professional prompt engineer for an AI image processing model. Your task is to generate a highly specific and technical prompt for cleaning and isolating handwritten signatures or text from a digital image, based on a user's request.
+            // New detailed enhancement prompt, as per first tests is worse then the original
+            const enhancementPrompt2 = `You are a professional prompt engineer for an AI image processing model. Your task is to generate a highly specific and technical prompt for cleaning and isolating handwritten signatures or text from a digital image, based on a user's request.
 
 The user's original request is: "${translatedText}"
 
@@ -499,6 +499,19 @@ Your prompt must include the following specifications:
 You must also analyze the user's request for any specific instructions. If the user asks to "keep," "preserve," or "leave" a certain element (e.g., a color, a mark, a line), you must add an explicit instruction at the end of the prompt to ensure that element is not removed.
 
 Return only the final, enhanced prompt. Do not include any additional text, explanations, or conversational phrases.`;
+
+            // mix of the two prompts, seems to work worse than the original
+            const enhancementPrompt3 = `You are a professional prompt engineer for an AI image processing model. Your task is to generate a highly specific and technical prompt for cleaning and isolating handwritten signatures or text from a digital image, based on a user's request.
+            
+Enhance this instruction for image processing of handwritten signatures/text. Make it more specific and technical while preserving the original intent: "${translatedText}"
+
+Focus on:
+- Image cleaning and noise reduction
+- Contrast and clarity improvements
+- Preservation of authentic handwriting characteristics
+- Technical specifications for signature enhancement
+
+Return only the enhanced prompt, no additional text.`;
 
             this.updateWorkflowStep(enhancementStep.id, { prompt: enhancementPrompt });
 
