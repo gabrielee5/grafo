@@ -196,19 +196,12 @@ class SignatureCleaner {
             return;
         }
 
-        // Show processing indicator for privacy features
-        this.showStatus('Analisi privacy in corso...', 'info');
-
         try {
-            // Analyze metadata before stripping
+            // Analyze metadata before stripping (silently)
             const metadataAnalysis = await ImagePrivacyUtils.analyzeMetadata(file);
             
-            // Strip metadata for privacy
+            // Strip metadata for privacy (silently)
             const cleanFile = await ImagePrivacyUtils.stripMetadata(file);
-            
-            // Show privacy report
-            const privacyReport = ImagePrivacyUtils.formatPrivacyReport(metadataAnalysis);
-            this.showStatus(privacyReport, 'success');
 
             this.currentImageFile = cleanFile;
             this.originalImageFile = file; // Keep original for size comparison
@@ -218,19 +211,18 @@ class SignatureCleaner {
             this.processButton.disabled = false;
             this.uploadArea.classList.add('has-image');
             
-            // Update upload area to show selected file with privacy info
+            // Update upload area to show selected file with simple privacy info
             const placeholder = this.uploadArea.querySelector('.upload-placeholder');
-            const sizeDiff = file.size - cleanFile.size;
-            const sizeDiffText = sizeDiff > 0 ? ` (${this.formatFileSize(sizeDiff)} metadati rimossi)` : '';
             
             placeholder.innerHTML = `
                 <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                 </svg>
-                <h3>🔒 ${cleanFile.name}</h3>
+                <h3>${cleanFile.name}</h3>
                 <p>Privacy protetta • Click per cambiare immagine</p>
-                ${metadataAnalysis.hasMetadata ? `<small class="privacy-note">Metadati rimossi${sizeDiffText}</small>` : '<small class="privacy-note">Nessun metadato rilevato</small>'}
             `;
+
+            this.showStatus('Immagine caricata con successo. Pronto per elaborare.', 'success');
 
         } catch (error) {
             console.error('Privacy processing failed:', error);
@@ -253,7 +245,7 @@ class SignatureCleaner {
                 <p>Click to select a different image</p>
             `;
             
-            this.showStatus('⚠️ Protezione privacy non disponibile - immagine caricata normalmente', 'warning');
+            this.showStatus('Immagine caricata con successo. Pronto per elaborare.', 'success');
         }
     }
 
@@ -266,12 +258,9 @@ class SignatureCleaner {
             // Set preview image
             this.previewImage.src = e.target.result;
             
-            // Set file info with privacy status
+            // Set file info
             this.previewFileName.textContent = file.name;
-            const sizeText = this.formatFileSize(file.size);
-            const privacyText = this.metadataAnalysis ? 
-                (this.metadataAnalysis.hasMetadata ? ' • 🔒 Privacy protetta' : ' • ✅ Nessun metadato') : '';
-            this.previewFileSize.textContent = sizeText + privacyText;
+            this.previewFileSize.textContent = this.formatFileSize(file.size);
             
             // Also set original image for results section
             this.originalImage.src = e.target.result;
@@ -781,7 +770,7 @@ Return only the enhanced prompt, no additional text.`;
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            this.showStatus('🔒 Immagine migliorata scaricata (privacy protetta)!', 'success');
+            this.showStatus('Immagine migliorata scaricata con successo!', 'success');
             
         } catch (error) {
             console.error('Error stripping metadata from download:', error);
