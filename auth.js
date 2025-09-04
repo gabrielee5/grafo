@@ -1158,7 +1158,7 @@ class AuthModalManager {
                 window.signatureCleaner?.showStatus(message, 'success');
                 this.hideAccountSettingsModal();
             } else {
-                window.signatureCleaner?.showStatus('Nessun cambiamento rilevato', 'info');
+                // No changes detected - no toast needed
             }
 
         } catch (error) {

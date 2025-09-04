@@ -346,17 +346,14 @@ class SignatureCleaner {
     async processImageWithPipeline(base64Data, italianInput) {
         try {
             // Step 1: Translation
-            this.showStatus('Traduzione in corso...', 'info');
             this.updateProcessButtonText('Traduzione...');
             const englishText = await this.translateToEnglish(italianInput);
             
             // Step 2: Enhancement
-            this.showStatus('Miglioramento prompt...', 'info');
             this.updateProcessButtonText('Miglioramento...');
             const enhancedPrompt = await this.enhancePrompt(englishText);
             
             // Step 3: Image Processing
-            this.showStatus('Elaborazione immagine...', 'info');
             this.updateProcessButtonText('Elaborazione...');
             
             const imageStep = this.addWorkflowStep({
@@ -389,7 +386,6 @@ class SignatureCleaner {
             
             // Fallback: try direct processing with Italian text
             console.log('Fallback: attempting direct processing');
-            this.showStatus('Fallback: elaborazione diretta...', 'info');
             
             try {
                 const response = await this.callGeminiAPI(base64Data, italianInput);
@@ -726,7 +722,7 @@ Return only the enhanced prompt, no additional text.`;
         this.processButton.disabled = false;
         
         // Update status
-        this.showStatus('Pronto per ulteriori modifiche. Inserisci nuove istruzioni e processa di nuovo.', 'info');
+        // Ready for further editing - no toast needed
         
         // Scroll back to the instructions area
         this.customInstructions.scrollIntoView({ behavior: 'smooth' });
