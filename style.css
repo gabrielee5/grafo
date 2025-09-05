@@ -2134,6 +2134,112 @@ body {
     max-width: 480px;
 }
 
+/* Content Pages Modal Styles */
+.content-modal {
+    max-width: 800px;
+    max-height: 80vh;
+}
+
+.content-modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.content-modal-body h1 {
+    color: #1f2937;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #3b82f6;
+    padding-bottom: 0.5rem;
+}
+
+.content-modal-body h2 {
+    color: #374151;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3b82f6;
+    padding-left: 1rem;
+}
+
+.content-modal-body h3 {
+    color: #4b5563;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.content-modal-body p {
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+.content-modal-body ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.content-modal-body li {
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+.content-modal-body .step {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.content-modal-body .step-number {
+    display: inline-block;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    line-height: 24px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-right: 0.75rem;
+}
+
+.content-modal-body .tip {
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    border-left: 4px solid #10b981;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.content-modal-body .tip-title {
+    color: #047857;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.content-modal-body .warning {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.content-modal-body .warning-title {
+    color: #92400e;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
 /* Responsive Adjustments for Auth */
 @media (max-width: 768px) {
     .header-content {

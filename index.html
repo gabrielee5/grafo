@@ -516,6 +516,21 @@
         </div>
     </div>
 
+    <!-- Content Pages Modal -->
+    <div id="contentModal" class="auth-modal" hidden>
+        <div class="modal-content content-modal">
+            <div class="modal-header">
+                <h2 id="contentModalTitle">Titolo</h2>
+                <button id="closeContentButton" class="close-btn" aria-label="Chiudi">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="contentModalBody" class="content-modal-body">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Immediate script to ensure modals are hidden -->
     <script>
         // Force hide auth modals immediately, before any other scripts run
@@ -523,6 +538,7 @@
             const signInModal = document.getElementById('signInModal');
             const signUpModal = document.getElementById('signUpModal');
             const accountSettingsModal = document.getElementById('accountSettingsModal');
+            const contentModal = document.getElementById('contentModal');
             if (signInModal) {
                 signInModal.setAttribute('hidden', '');
                 signInModal.style.display = 'none';
@@ -534,6 +550,10 @@
             if (accountSettingsModal) {
                 accountSettingsModal.setAttribute('hidden', '');
                 accountSettingsModal.style.display = 'none';
+            }
+            if (contentModal) {
+                contentModal.setAttribute('hidden', '');
+                contentModal.style.display = 'none';
             }
         })();
     </script>
