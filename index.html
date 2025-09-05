@@ -140,6 +140,43 @@
                 </button>
             </div>
 
+            <!-- Progress Bar Section -->
+            <div class="progress-section" id="progressSection" hidden>
+                <div class="progress-header">
+                    <h3>Elaborazione in corso...</h3>
+                </div>
+                <div class="progress-ladder" id="progressLadder">
+                    <div class="progress-step" data-step="validation">
+                        <div class="step-circle">
+                            <div class="step-icon"></div>
+                        </div>
+                        <div class="step-label">Validazione Input</div>
+                        <div class="step-connector"></div>
+                    </div>
+                    <div class="progress-step" data-step="translation">
+                        <div class="step-circle">
+                            <div class="step-icon"></div>
+                        </div>
+                        <div class="step-label">Traduzione</div>
+                        <div class="step-connector"></div>
+                    </div>
+                    <div class="progress-step" data-step="enhancement">
+                        <div class="step-circle">
+                            <div class="step-icon"></div>
+                        </div>
+                        <div class="step-label">Ottimizzazione</div>
+                        <div class="step-connector"></div>
+                    </div>
+                    <div class="progress-step" data-step="processing">
+                        <div class="step-circle">
+                            <div class="step-icon"></div>
+                        </div>
+                        <div class="step-label">Elaborazione</div>
+                        <div class="step-connector"></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="results-section" id="resultsSection" hidden>
                 <div class="image-comparison">
                     <div class="image-container">
@@ -201,25 +238,9 @@
                 </div>
             </div>
             
-            <!-- Workflow Debug Section -->
-            <div class="workflow-debug-section">
-                <button id="debugToggle" class="debug-toggle-button" type="button">
-                    <svg class="debug-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6,9 12,15 18,9"></polyline>
-                    </svg>
-                    Mostra Processo
-                </button>
-                
-                <div class="workflow-steps" id="workflowSteps" hidden>
-                    <div class="workflow-header">
-                        <h3>Processo di Elaborazione</h3>
-                        <p>Visualizza tutti i passaggi e i prompt utilizzati</p>
-                    </div>
-                    
-                    <div class="workflow-ladder" id="workflowLadder">
-                        <!-- Steps will be dynamically added here -->
-                    </div>
-                </div>
+            <!-- Hidden workflow debug elements (for background tracking only) -->
+            <div class="workflow-steps" id="workflowSteps" hidden style="display: none;">
+                <div class="workflow-ladder" id="workflowLadder"></div>
             </div>
         </main>
 

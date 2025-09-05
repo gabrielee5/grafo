@@ -9,7 +9,30 @@ class SignatureCleaner {
         
         // Workflow tracking
         this.workflowSteps = [];
-        this.debugVisible = false;
+        
+        // Step mapping for user-friendly names
+        this.stepMapping = {
+            'Input Utente Ricevuto': { 
+                key: 'validation', 
+                userFriendlyName: 'Validazione Input' 
+            },
+            'Traduzione Italiano → Inglese': { 
+                key: 'translation', 
+                userFriendlyName: 'Traduzione' 
+            },
+            'Miglioramento Prompt Tecnico': { 
+                key: 'enhancement', 
+                userFriendlyName: 'Ottimizzazione' 
+            },
+            'Elaborazione Immagine': { 
+                key: 'processing', 
+                userFriendlyName: 'Elaborazione' 
+            },
+            'Fallback: Elaborazione Diretta': { 
+                key: 'processing', 
+                userFriendlyName: 'Elaborazione' 
+            }
+        };
         
         // Load configuration
         this.maxFileSize = CONFIG.MAX_FILE_SIZE;
@@ -40,9 +63,12 @@ class SignatureCleaner {
         this.downloadButton = document.getElementById('downloadButton');
         this.resetButton = document.getElementById('resetButton');
         this.toastContainer = document.getElementById('toastContainer');
-        this.debugToggle = document.getElementById('debugToggle');
         this.workflowStepsElement = document.getElementById('workflowSteps');
         this.workflowLadder = document.getElementById('workflowLadder');
+        
+        // Progress bar elements
+        this.progressSection = document.getElementById('progressSection');
+        this.progressLadder = document.getElementById('progressLadder');
         
         // Zoom control elements
         this.initializeZoomElements();
@@ -91,8 +117,7 @@ class SignatureCleaner {
         // Reset button
         this.resetButton.addEventListener('click', () => this.resetApp());
         
-        // Debug toggle button
-        this.debugToggle.addEventListener('click', () => this.toggleDebugView());
+        // Debug functionality removed from UI
         
         // Zoom functionality
         this.setupZoomListeners();
@@ -830,6 +855,7 @@ Return only the enhanced prompt, no additional text.`;
         this.processButton.disabled = true;
         this.previewSection.hidden = true;
         this.resultsSection.hidden = true;
+        this.progressSection.hidden = true;
         this.uploadArea.classList.remove('has-image');
         
         // Reset upload area placeholder
@@ -855,10 +881,16 @@ Return only the enhanced prompt, no additional text.`;
             this.processButton.classList.add('processing');
             this.processButton.querySelector('.button-text').textContent = 'Elaborazione...';
             this.processButton.querySelector('.spinner').hidden = false;
+            
+            // Show progress bar
+            this.showProgressBar();
         } else {
             this.processButton.classList.remove('processing');
             this.processButton.querySelector('.button-text').textContent = 'Elabora Immagine';
             this.processButton.querySelector('.spinner').hidden = true;
+            
+            // Hide progress bar
+            this.hideProgressBar();
         }
     }
 
@@ -1015,29 +1047,56 @@ Return only the enhanced prompt, no additional text.`;
         });
     }
 
-    // Debug and workflow tracking methods
-    toggleDebugView() {
-        this.debugVisible = !this.debugVisible;
+    // Workflow tracking methods (background only)
+
+    // Progress bar methods
+    showProgressBar() {
+        this.progressSection.hidden = false;
+        this.resetProgressBar();
+    }
+    
+    hideProgressBar() {
+        this.progressSection.hidden = true;
+    }
+    
+    resetProgressBar() {
+        const steps = this.progressLadder.querySelectorAll('.progress-step');
+        steps.forEach(step => {
+            const circle = step.querySelector('.step-circle');
+            const connector = step.querySelector('.step-connector');
+            
+            circle.className = 'step-circle waiting';
+            if (connector) {
+                connector.className = 'step-connector';
+            }
+        });
+    }
+    
+    updateProgressStep(stepKey, status) {
+        const stepElement = this.progressLadder.querySelector(`[data-step="${stepKey}"]`);
+        if (!stepElement) return;
         
-        const debugIcon = this.debugToggle.querySelector('.debug-icon');
-        const buttonText = this.debugToggle.querySelector('.debug-icon').nextSibling;
+        const circle = stepElement.querySelector('.step-circle');
+        const connector = stepElement.querySelector('.step-connector');
         
-        if (this.debugVisible) {
-            this.workflowStepsElement.hidden = false;
-            // Change to up arrow
-            debugIcon.innerHTML = '<polyline points="18,15 12,9 6,15"></polyline>';
-            buttonText.textContent = ' Nascondi Processo';
-        } else {
-            this.workflowStepsElement.hidden = true;
-            // Change to down arrow
-            debugIcon.innerHTML = '<polyline points="6,9 12,15 18,9"></polyline>';
-            buttonText.textContent = ' Mostra Processo';
+        // Remove all status classes
+        circle.classList.remove('waiting', 'active', 'completed', 'failed');
+        
+        // Add new status class
+        circle.classList.add(status);
+        
+        // Update connector if step is completed
+        if (connector && status === 'completed') {
+            connector.classList.add('completed');
+        } else if (connector && status === 'active') {
+            connector.classList.add('active');
         }
     }
 
     clearWorkflowSteps() {
         this.workflowSteps = [];
         this.workflowLadder.innerHTML = '';
+        this.resetProgressBar();
     }
 
     addWorkflowStep(stepData) {
@@ -1055,6 +1114,9 @@ Return only the enhanced prompt, no additional text.`;
         this.workflowSteps.push(step);
         this.renderWorkflowStep(step);
         
+        // Update progress bar
+        this.updateProgressBarFromStep(step);
+        
         return step;
     }
 
@@ -1063,7 +1125,26 @@ Return only the enhanced prompt, no additional text.`;
         if (stepIndex !== -1) {
             this.workflowSteps[stepIndex] = { ...this.workflowSteps[stepIndex], ...updates };
             this.renderWorkflowStep(this.workflowSteps[stepIndex]);
+            
+            // Update progress bar
+            this.updateProgressBarFromStep(this.workflowSteps[stepIndex]);
         }
+    }
+    
+    updateProgressBarFromStep(step) {
+        const mapping = this.stepMapping[step.title];
+        if (!mapping) return;
+        
+        let progressStatus = 'waiting';
+        if (step.status === 'in-progress') {
+            progressStatus = 'active';
+        } else if (step.status === 'completed') {
+            progressStatus = 'completed';
+        } else if (step.status === 'failed') {
+            progressStatus = 'failed';
+        }
+        
+        this.updateProgressStep(mapping.key, progressStatus);
     }
 
     renderWorkflowStep(step) {
