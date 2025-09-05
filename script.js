@@ -322,6 +322,9 @@ class SignatureCleaner {
 
         this.setProcessingState(true);
         this.clearWorkflowSteps(); // Clear previous workflow steps
+        
+        // Hide previous results when starting new processing
+        this.resultsSection.hidden = true;
 
         try {
             // Convert image to base64
