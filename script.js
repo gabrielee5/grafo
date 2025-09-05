@@ -126,6 +126,9 @@ class SignatureCleaner {
         
         // Authentication event listeners
         this.setupAuthListeners();
+        
+        // Footer links
+        this.setupFooterListeners();
     }
     
     setupAuthListeners() {
@@ -185,6 +188,51 @@ class SignatureCleaner {
                 authButton.classList.remove('menu-open');
             }
         });
+    }
+    
+    setupFooterListeners() {
+        // Footer navigation links
+        const footerLinks = {
+            'guideLink': 'guide',
+            'faqLink': 'faq',
+            'examplesLink': 'examples',
+            'contactLink': 'contact',
+            'technicalSupportLink': 'support',
+            'feedbackLink': 'feedback',
+            'privacyLink': 'privacy',
+            'termsLink': 'terms',
+            'aboutLink': 'about'
+        };
+        
+        // Add event listeners to all footer links
+        Object.entries(footerLinks).forEach(([linkId, page]) => {
+            const link = document.getElementById(linkId);
+            if (link) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.navigateToPage(page);
+                });
+            }
+        });
+    }
+    
+    navigateToPage(page) {
+        // For now, show a placeholder message
+        // In the future, you can implement actual navigation or modal content
+        const pageMessages = {
+            'guide': 'Guida all\'Uso - Qui verranno aggiunte istruzioni dettagliate su come utilizzare il servizio.',
+            'faq': 'Domande Frequenti - Qui verranno aggiunte le risposte alle domande più comuni.',
+            'examples': 'Esempi e Casi di Studio - Qui verranno mostrati esempi di elaborazioni e casi d\'uso.',
+            'contact': 'Contatti - Qui verranno aggiunte le informazioni di contatto.',
+            'support': 'Supporto Tecnico - Qui verranno aggiunte le informazioni per il supporto tecnico.',
+            'feedback': 'Invia Feedback - Qui verrà aggiunto un modulo per il feedback.',
+            'privacy': 'Privacy Policy - Qui verrà aggiunta la politica sulla privacy.',
+            'terms': 'Termini di Servizio - Qui verranno aggiunti i termini di servizio.',
+            'about': 'Chi Siamo - Qui verranno aggiunte informazioni sul progetto e sul team.'
+        };
+        
+        const message = pageMessages[page] || 'Pagina non trovata';
+        this.showStatus(message, 'info');
     }
 
     handleDragOver(e) {
