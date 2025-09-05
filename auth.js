@@ -518,15 +518,9 @@ class AuthService {
                     <div class="user-rating" data-session-id="${item.sessionId}">
                         <div class="stars">
                             ${[1,2,3,4,5].map(star => 
-                                `<span class="star ${(item.userRating && item.userRating >= star) ? 'filled' : ''}" data-rating="${star}">⭐</span>`
+                                `<span class="star ${(item.userRating && item.userRating >= star) ? 'filled' : ''}" data-rating="${star}">★</span>`
                             ).join('')}
                         </div>
-                        <span class="rating-text">
-                            ${item.userRating ? 
-                                `Valutato ${item.userRating}/5` : 
-                                'Valuta questo risultato'
-                            }
-                        </span>
                     </div>
                 </div>
             </div>
@@ -629,7 +623,6 @@ class AuthService {
 
     updateRatingDisplay(element, rating) {
         const stars = element.querySelectorAll('.star');
-        const ratingText = element.querySelector('.rating-text');
         
         // Update star display
         stars.forEach((star, index) => {
@@ -639,11 +632,6 @@ class AuthService {
                 star.classList.remove('filled');
             }
         });
-        
-        // Update rating text
-        if (ratingText) {
-            ratingText.textContent = `Valutato ${rating}/5`;
-        }
     }
 
     hideHistoryPanel() {

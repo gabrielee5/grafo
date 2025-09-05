@@ -1787,28 +1787,21 @@ body {
 }
 
 .star {
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
-    opacity: 0.3;
+    color: #d1d5db;
+    text-shadow: 0 0 1px rgba(0,0,0,0.3);
 }
 
 .star:hover {
     transform: scale(1.1);
-    opacity: 0.8;
-}
-
-.star.filled {
-    opacity: 1;
     color: #fbbf24;
 }
 
-.rating-text {
-    font-size: 11px;
-    color: #6b7280;
-    font-weight: 500;
-    white-space: nowrap;
+.star.filled {
+    color: #fbbf24;
 }
 
 .actions {
