@@ -68,7 +68,8 @@ class SignatureCleaner {
         
         // Progress bar elements
         this.progressSection = document.getElementById('progressSection');
-        this.progressLadder = document.getElementById('progressLadder');
+        this.progressCurrentStep = document.getElementById('progressCurrentStep');
+        this.stepsCompleted = document.getElementById('stepsCompleted');
         
         // Zoom control elements
         this.initializeZoomElements();
@@ -1060,36 +1061,47 @@ Return only the enhanced prompt, no additional text.`;
     }
     
     resetProgressBar() {
-        const steps = this.progressLadder.querySelectorAll('.progress-step');
-        steps.forEach(step => {
-            const circle = step.querySelector('.step-circle');
-            const connector = step.querySelector('.step-connector');
-            
-            circle.className = 'step-circle waiting';
-            if (connector) {
-                connector.className = 'step-connector';
-            }
+        const segments = document.querySelectorAll('.progress-bar-segment');
+        segments.forEach(segment => {
+            const fill = segment.querySelector('.segment-fill');
+            fill.className = 'segment-fill waiting';
         });
+        
+        this.progressCurrentStep.textContent = 'Inizializzazione...';
+        this.stepsCompleted.textContent = '0';
     }
     
     updateProgressStep(stepKey, status) {
-        const stepElement = this.progressLadder.querySelector(`[data-step="${stepKey}"]`);
+        const stepElement = document.querySelector(`[data-step="${stepKey}"]`);
         if (!stepElement) return;
         
-        const circle = stepElement.querySelector('.step-circle');
-        const connector = stepElement.querySelector('.step-connector');
+        const fill = stepElement.querySelector('.segment-fill');
         
         // Remove all status classes
-        circle.classList.remove('waiting', 'active', 'completed', 'failed');
+        fill.classList.remove('waiting', 'active', 'completed', 'failed');
         
         // Add new status class
-        circle.classList.add(status);
+        fill.classList.add(status);
         
-        // Update connector if step is completed
-        if (connector && status === 'completed') {
-            connector.classList.add('completed');
-        } else if (connector && status === 'active') {
-            connector.classList.add('active');
+        // Update current step text
+        const stepNames = {
+            'validation': 'Validazione input...',
+            'translation': 'Traduzione in corso...',
+            'enhancement': 'Ottimizzazione prompt...',
+            'processing': 'Elaborazione immagine...'
+        };
+        
+        if (status === 'active') {
+            this.progressCurrentStep.textContent = stepNames[stepKey] || 'Elaborazione...';
+        }
+        
+        // Update completed count
+        const completedCount = document.querySelectorAll('.segment-fill.completed').length;
+        this.stepsCompleted.textContent = completedCount.toString();
+        
+        // If all steps completed, update final message
+        if (completedCount === 4) {
+            this.progressCurrentStep.textContent = 'Elaborazione completata!';
         }
     }
 

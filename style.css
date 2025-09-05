@@ -872,7 +872,7 @@ body {
     }
 }
 
-/* Horizontal Progress Styles - Simplified */
+/* Segmented Progress Bar Styles */
 .progress-section {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -883,182 +883,178 @@ body {
 
 .progress-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .progress-header h3 {
     color: #374151;
     font-size: 1rem;
     font-weight: 500;
-    margin: 0;
+    margin: 0 0 8px 0;
 }
 
-.progress-ladder {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    max-width: 500px;
-    margin: 0 auto;
-    position: relative;
-}
-
-.progress-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-}
-
-.step-circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.step-circle.waiting {
-    background: #e5e7eb;
-}
-
-.step-circle.active {
-    background: #3b82f6;
-}
-
-.step-circle.completed {
-    background: #10b981;
-}
-
-.step-circle.failed {
-    background: #ef4444;
-}
-
-.step-icon {
-    width: 16px;
-    height: 16px;
-    position: relative;
-}
-
-.step-circle.waiting .step-icon::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: #9ca3af;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.step-circle.active .step-icon::before {
-    content: '';
-    width: 12px;
-    height: 12px;
-    border: 2px solid white;
-    border-top: 2px solid transparent;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: spin 1s linear infinite;
-}
-
-.step-circle.completed .step-icon::before {
-    content: '✓';
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.step-circle.failed .step-icon::before {
-    content: '✗';
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-.step-label {
+.progress-current-step {
     color: #6b7280;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 400;
-    margin-top: 8px;
-    text-align: center;
-    max-width: 70px;
 }
 
-.step-circle.active + .step-label {
+.progress-bar-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.progress-bar-track {
+    background: #e5e7eb;
+    border-radius: 12px;
+    height: 24px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-segment {
+    flex: 1;
+    position: relative;
+    border-right: 2px solid #f8fafc;
+}
+
+.progress-bar-segment:last-child {
+    border-right: none;
+}
+
+.segment-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+    position: relative;
+}
+
+.segment-fill.waiting {
+    background: #e5e7eb;
+    width: 0%;
+}
+
+.segment-fill.active {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    width: 100%;
+    animation: progress-pulse 2s ease-in-out infinite;
+}
+
+.segment-fill.completed {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    width: 100%;
+}
+
+.segment-fill.failed {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+    width: 100%;
+}
+
+@keyframes progress-pulse {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.segment-fill.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
+    animation: progress-shine 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+    0% {
+        transform: translateX(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translateX(-20px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-40px);
+        opacity: 0;
+    }
+}
+
+.segment-label {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.segment-fill.active + .segment-label {
     color: #3b82f6;
     font-weight: 500;
 }
 
-.step-circle.completed + .step-label {
+.segment-fill.completed + .segment-label {
     color: #10b981;
     font-weight: 500;
 }
 
-.step-connector {
-    position: absolute;
-    top: 16px;
-    left: calc(100% - 15px);
-    width: 30px;
-    height: 2px;
-    background: #e5e7eb;
-    z-index: 1;
+.segment-fill.failed + .segment-label {
+    color: #ef4444;
+    font-weight: 500;
 }
 
-.progress-step:last-child .step-connector {
-    display: none;
+.progress-steps-info {
+    text-align: center;
+    margin-top: 16px;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
-.step-connector.completed {
-    background: #10b981;
+.steps-completed {
+    font-weight: 600;
+    color: #3b82f6;
 }
 
-/* Responsive progress bar */
+.steps-total {
+    font-weight: 500;
+}
+
+/* Responsive design */
 @media (max-width: 600px) {
-    .progress-ladder {
-        gap: 20px;
+    .progress-section {
+        padding: 20px 16px;
     }
     
-    .step-circle {
-        width: 28px;
-        height: 28px;
+    .progress-bar-track {
+        height: 20px;
+        margin-bottom: 14px;
     }
     
-    .step-icon {
-        width: 14px;
-        height: 14px;
-    }
-    
-    .step-label {
+    .segment-label {
+        top: 24px;
         font-size: 0.7rem;
-        max-width: 50px;
     }
     
-    .step-connector {
-        top: 14px;
-        width: 20px;
+    .progress-header h3 {
+        font-size: 0.9rem;
+    }
+    
+    .progress-current-step {
+        font-size: 0.8rem;
+    }
+    
+    .progress-steps-info {
+        font-size: 0.8rem;
     }
 }
 
