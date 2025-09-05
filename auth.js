@@ -254,9 +254,14 @@ class AuthService {
 
             const history = [];
             query.forEach(doc => {
+                const data = doc.data();
+                
+                // Return only user-facing data for the UI
                 history.push({
                     id: doc.id,
-                    ...doc.data()
+                    sessionId: data.sessionId,
+                    timestamp: data.timestamp,
+                    ...data.userView // Only include userView data for users
                 });
             });
 
@@ -266,6 +271,7 @@ class AuthService {
             return this.getLocalStorageHistory();
         }
     }
+
 
     // LocalStorage fallback methods
     saveToLocalStorage(historyItem) {
@@ -459,7 +465,7 @@ class AuthService {
         if (!historyList) return;
 
         try {
-            const history = await this.getUserHistory(10);
+            const history = await this.getUserHistory(15);
             
             if (history.length === 0) {
                 historyList.innerHTML = '<p class="no-history">Nessuna cronologia disponibile</p>';
@@ -469,41 +475,181 @@ class AuthService {
             // Clear existing content
             historyList.innerHTML = '';
 
-            // Create history items safely without XSS vulnerability
+            // Create history items with new minimal interface
             history.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-
-                // Create date element
-                const dateElement = document.createElement('div');
-                dateElement.className = 'history-item-date';
-                const date = new Date(item.timestamp?.toDate?.() || item.timestamp);
-                dateElement.textContent = date.toLocaleDateString('it-IT');
-
-                // Create instructions element with safe text content
-                const instructionsElement = document.createElement('div');
-                instructionsElement.className = 'history-item-instructions';
-                
-                // Use SecurityUtils to safely set content
-                if (window.SecurityUtils) {
-                    SecurityUtils.safeSetTextContent(
-                        instructionsElement, 
-                        item.instructions || 'Nessuna istruzione',
-                        { maxLength: 200, allowNewlines: false }
-                    );
-                } else {
-                    // Fallback if SecurityUtils not loaded
-                    instructionsElement.textContent = (item.instructions || 'Nessuna istruzione').substring(0, 200);
-                }
-
-                historyItem.appendChild(dateElement);
-                historyItem.appendChild(instructionsElement);
-                historyList.appendChild(historyItem);
+                const historyElement = this.createHistoryItemElement(item);
+                historyList.appendChild(historyElement);
             });
             
         } catch (error) {
             console.error('Error loading history UI:', error);
             historyList.innerHTML = '<p class="history-error">Errore nel caricamento della cronologia</p>';
+        }
+    }
+
+    createHistoryItemElement(item) {
+        const element = document.createElement('div');
+        element.className = 'history-item enhanced';
+        
+        const date = new Date(item.timestamp?.toDate?.() || item.timestamp);
+        const statusIcon = item.result === 'success' ? '✓' : '✗';
+        const statusClass = item.result === 'success' ? 'success' : 'failed';
+        
+        element.innerHTML = `
+            <div class="history-header">
+                <div class="date-time">
+                    <span class="date">${date.toLocaleDateString('it-IT')}</span>
+                    <span class="time">${date.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</span>
+                </div>
+                <div class="status ${statusClass}">${statusIcon}</div>
+            </div>
+            
+            <div class="request-info">
+                <div class="prompt">"${this.escapeHtml(item.prompt)}"</div>
+                <div class="file-info">
+                    <span>📄 ${this.escapeHtml(item.fileName)}</span>
+                    ${item.outputFileName ? 
+                        ` → <span>📄 ${this.escapeHtml(item.outputFileName)}</span>` 
+                        : ''
+                    }
+                </div>
+                <div class="processing-time">Elaborato in ${item.processingTime}</div>
+            </div>
+            
+            <div class="user-rating" data-session-id="${item.sessionId}">
+                <div class="stars">
+                    ${[1,2,3,4,5].map(star => 
+                        `<span class="star ${(item.userRating && item.userRating >= star) ? 'filled' : ''}" data-rating="${star}">⭐</span>`
+                    ).join('')}
+                </div>
+                <span class="rating-text">
+                    ${item.userRating ? 
+                        `Valutato ${item.userRating}/5` : 
+                        'Valuta questo risultato'
+                    }
+                </span>
+            </div>
+            
+            <div class="actions">
+                <button class="reuse-btn" data-prompt="${this.escapeHtml(item.prompt)}">
+                    Riusa testo
+                </button>
+                <button class="copy-btn" data-prompt="${this.escapeHtml(item.prompt)}">
+                    Copia
+                </button>
+            </div>
+        `;
+        
+        // Add event listeners
+        this.addHistoryItemListeners(element, item);
+        
+        return element;
+    }
+
+    addHistoryItemListeners(element, item) {
+        // Reuse button
+        const reuseBtn = element.querySelector('.reuse-btn');
+        if (reuseBtn) {
+            reuseBtn.addEventListener('click', (e) => {
+                const prompt = e.target.dataset.prompt;
+                const instructionsField = document.getElementById('customInstructions');
+                if (instructionsField) {
+                    instructionsField.value = prompt;
+                    // Hide history panel and focus on instructions
+                    this.hideHistoryPanel();
+                    instructionsField.focus();
+                    window.signatureCleaner?.showStatus('Testo ricaricato dalla cronologia', 'success');
+                }
+            });
+        }
+        
+        // Copy button  
+        const copyBtn = element.querySelector('.copy-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                const prompt = e.target.dataset.prompt;
+                navigator.clipboard.writeText(prompt).then(() => {
+                    window.signatureCleaner?.showStatus('Testo copiato negli appunti', 'success');
+                }).catch(() => {
+                    window.signatureCleaner?.showStatus('Errore nella copia', 'error');
+                });
+            });
+        }
+        
+        // Rating stars
+        const stars = element.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                const rating = parseInt(e.target.dataset.rating);
+                const sessionId = element.querySelector('.user-rating').dataset.sessionId;
+                this.submitRating(sessionId, rating, element);
+            });
+        });
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async submitRating(sessionId, rating, element) {
+        if (!this.isLoggedIn() || !this.initialized) {
+            window.signatureCleaner?.showStatus('Devi essere autenticato per valutare', 'error');
+            return;
+        }
+
+        try {
+            // Update the rating in Firestore
+            const query = await this.firestore
+                .collection('userHistory')
+                .where('sessionId', '==', sessionId)
+                .where('userId', '==', this.currentUser.uid)
+                .get();
+
+            if (!query.empty) {
+                const doc = query.docs[0];
+                await doc.ref.update({
+                    'userView.userRating': rating
+                });
+
+                // Update the UI immediately
+                this.updateRatingDisplay(element, rating);
+                window.signatureCleaner?.showStatus('Valutazione salvata, grazie!', 'success');
+            } else {
+                console.error('Session not found:', sessionId);
+                window.signatureCleaner?.showStatus('Errore nel salvare la valutazione', 'error');
+            }
+        } catch (error) {
+            console.error('Rating save error:', error);
+            window.signatureCleaner?.showStatus('Errore nel salvare la valutazione', 'error');
+        }
+    }
+
+    updateRatingDisplay(element, rating) {
+        const stars = element.querySelectorAll('.star');
+        const ratingText = element.querySelector('.rating-text');
+        
+        // Update star display
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('filled');
+            } else {
+                star.classList.remove('filled');
+            }
+        });
+        
+        // Update rating text
+        if (ratingText) {
+            ratingText.textContent = `Valutato ${rating}/5`;
+        }
+    }
+
+    hideHistoryPanel() {
+        const historyPanel = document.getElementById('historyPanel');
+        if (historyPanel) {
+            historyPanel.hidden = true;
+            historyPanel.classList.remove('active');
         }
     }
 

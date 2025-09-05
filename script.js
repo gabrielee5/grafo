@@ -1341,12 +1341,39 @@ Return only the enhanced prompt, no additional text.`;
     async saveToHistory(instructions) {
         if (!window.authService) return;
         
+        // Generate session ID
+        const sessionId = this.generateSessionId();
+        
+        // Extract step data from existing workflowSteps
+        const steps = this.workflowSteps.map(step => ({
+            name: step.title,
+            input: step.prompt || instructions,
+            output: step.response || (step.status === 'failed' ? 'Error occurred' : 'Completed'),
+            duration: step.endTime && step.startTime ? (step.endTime - step.startTime) : 0,
+            status: step.status
+        }));
+        
+        // Calculate total processing time
+        const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
+        
         const historyItem = {
-            instructions: instructions,
-            fileName: this.currentImageFile ? this.currentImageFile.name : 'unknown',
-            fileSize: this.currentImageFile ? this.currentImageFile.size : 0,
-            processingDate: new Date().toISOString(),
-            success: true
+            sessionId: sessionId,
+            timestamp: new Date().toISOString(),
+            
+            // User view - simple data for user interface
+            userView: {
+                prompt: instructions,
+                fileName: this.currentImageFile ? this.currentImageFile.name : 'unknown',
+                result: this.processedImageBlob ? 'success' : 'failed',
+                processingTime: this.formatDuration(totalDuration),
+                outputFileName: this.processedImageBlob ? this.generateResultFileName() : null,
+                userRating: null
+            },
+            
+            // Debug info - step details for debugging
+            steps: steps,
+            totalDuration: totalDuration,
+            finalResult: this.processedImageBlob ? 'success' : 'failed'
         };
         
         try {
@@ -1355,6 +1382,25 @@ Return only the enhanced prompt, no additional text.`;
             console.error('Error saving to history:', error);
             // Don't show error to user - history saving is optional
         }
+    }
+    
+    generateSessionId() {
+        return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    generateResultFileName() {
+        if (!this.currentImageFile) return 'processed_image.png';
+        const baseName = this.currentImageFile.name.replace(/\.[^/.]+$/, '');
+        return baseName + '_enhanced.png';
+    }
+    
+    formatDuration(milliseconds) {
+        if (milliseconds < 1000) return milliseconds + 'ms';
+        const seconds = Math.round(milliseconds / 1000);
+        if (seconds < 60) return seconds + 's';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return minutes + 'm ' + remainingSeconds + 's';
     }
     
     // Removed old authentication modal methods - now handled by AuthModalManager
