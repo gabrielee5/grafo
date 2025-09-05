@@ -362,7 +362,7 @@ class SignatureCleaner {
 
         } catch (error) {
             console.error('Processing error:', error);
-            this.showStatus(`Errore nell'elaborazione dell'immagine: ${error.message}`, 'error');
+            this.showStatus(`Errore nell'elaborazione dell'immagine: ${error.message} `, 'error');
         } finally {
             this.setProcessingState(false);
         }
