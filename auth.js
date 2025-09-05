@@ -507,11 +507,7 @@ class AuthService {
             <div class="request-info">
                 <div class="prompt">"${this.escapeHtml(item.prompt)}"</div>
                 <div class="file-info">
-                    <span>${this.escapeHtml(item.fileName)}</span>
-                    ${item.outputFileName ? 
-                        ` → <span>${this.escapeHtml(item.outputFileName)}</span>` 
-                        : ''
-                    }
+                    <span> → ${this.escapeHtml(item.fileName)}</span>
                 </div>
                 <div class="processing-time">
                     <span>Elaborato in ${item.processingTime}</span>
