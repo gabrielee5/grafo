@@ -1767,27 +1767,27 @@ body {
 }
 
 .processing-time {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 12px;
     color: #6b7280;
     font-style: italic;
 }
 
 .user-rating {
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .stars {
     display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 2px;
 }
 
 .star {
-    font-size: 18px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
@@ -1805,9 +1805,10 @@ body {
 }
 
 .rating-text {
-    font-size: 12px;
+    font-size: 11px;
     color: #6b7280;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .actions {

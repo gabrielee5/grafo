@@ -513,21 +513,22 @@ class AuthService {
                         : ''
                     }
                 </div>
-                <div class="processing-time">Elaborato in ${item.processingTime}</div>
-            </div>
-            
-            <div class="user-rating" data-session-id="${item.sessionId}">
-                <div class="stars">
-                    ${[1,2,3,4,5].map(star => 
-                        `<span class="star ${(item.userRating && item.userRating >= star) ? 'filled' : ''}" data-rating="${star}">⭐</span>`
-                    ).join('')}
+                <div class="processing-time">
+                    <span>Elaborato in ${item.processingTime}</span>
+                    <div class="user-rating" data-session-id="${item.sessionId}">
+                        <div class="stars">
+                            ${[1,2,3,4,5].map(star => 
+                                `<span class="star ${(item.userRating && item.userRating >= star) ? 'filled' : ''}" data-rating="${star}">⭐</span>`
+                            ).join('')}
+                        </div>
+                        <span class="rating-text">
+                            ${item.userRating ? 
+                                `Valutato ${item.userRating}/5` : 
+                                'Valuta questo risultato'
+                            }
+                        </span>
+                    </div>
                 </div>
-                <span class="rating-text">
-                    ${item.userRating ? 
-                        `Valutato ${item.userRating}/5` : 
-                        'Valuta questo risultato'
-                    }
-                </span>
             </div>
             
             <div class="actions">
