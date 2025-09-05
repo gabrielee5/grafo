@@ -507,9 +507,9 @@ class AuthService {
             <div class="request-info">
                 <div class="prompt">"${this.escapeHtml(item.prompt)}"</div>
                 <div class="file-info">
-                    <span>📄 ${this.escapeHtml(item.fileName)}</span>
+                    <span>${this.escapeHtml(item.fileName)}</span>
                     ${item.outputFileName ? 
-                        ` → <span>📄 ${this.escapeHtml(item.outputFileName)}</span>` 
+                        ` → <span>${this.escapeHtml(item.outputFileName)}</span>` 
                         : ''
                     }
                 </div>
@@ -527,7 +527,7 @@ class AuthService {
             
             <div class="actions">
                 <button class="reuse-btn" data-prompt="${this.escapeHtml(item.prompt)}">
-                    Riusa testo
+                    Ripeti
                 </button>
                 <button class="copy-btn" data-prompt="${this.escapeHtml(item.prompt)}">
                     Copia
