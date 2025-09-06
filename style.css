@@ -2147,26 +2147,26 @@ body {
 }
 
 .content-modal-body h1 {
-    color: #1f2937;
+    color: #222;
     font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #3b82f6;
+    border-bottom: 2px solid #666;
     padding-bottom: 0.5rem;
 }
 
 .content-modal-body h2 {
-    color: #374151;
+    color: #333;
     font-size: 1.25rem;
     font-weight: 600;
     margin-top: 2rem;
     margin-bottom: 1rem;
-    border-left: 4px solid #3b82f6;
+    border-left: 3px solid #666;
     padding-left: 1rem;
 }
 
 .content-modal-body h3 {
-    color: #4b5563;
+    color: #444;
     font-size: 1.1rem;
     font-weight: 600;
     margin-top: 1.5rem;
@@ -2189,16 +2189,16 @@ body {
 }
 
 .content-modal-body .step {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
     padding: 1rem;
     margin: 1rem 0;
 }
 
 .content-modal-body .step-number {
     display: inline-block;
-    background: #3b82f6;
+    background: #666;
     color: white;
     border-radius: 50%;
     width: 24px;
@@ -2211,31 +2211,31 @@ body {
 }
 
 .content-modal-body .tip {
-    background: #ecfdf5;
-    border: 1px solid #d1fae5;
-    border-left: 4px solid #10b981;
-    border-radius: 6px;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #666;
+    border-radius: 4px;
     padding: 1rem;
     margin: 1rem 0;
 }
 
 .content-modal-body .tip-title {
-    color: #047857;
+    color: #333;
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
 .content-modal-body .warning {
-    background: #fef3c7;
-    border: 1px solid #fde68a;
-    border-left: 4px solid #f59e0b;
-    border-radius: 6px;
+    background: #f5f5f5;
+    border: 1px solid #d0d0d0;
+    border-left: 3px solid #888;
+    border-radius: 4px;
     padding: 1rem;
     margin: 1rem 0;
 }
 
 .content-modal-body .warning-title {
-    color: #92400e;
+    color: #444;
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
