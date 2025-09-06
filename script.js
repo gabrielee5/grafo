@@ -241,6 +241,14 @@ class SignatureCleaner {
     }
     
     
+    lockBodyScroll() {
+        document.body.style.overflow = 'hidden';
+    }
+    
+    unlockBodyScroll() {
+        document.body.style.overflow = '';
+    }
+
     showContentModal(title, content) {
         const modal = document.getElementById('contentModal');
         const modalTitle = document.getElementById('contentModalTitle');
@@ -249,6 +257,7 @@ class SignatureCleaner {
         if (modal && modalTitle && modalBody) {
             modalTitle.textContent = title;
             modalBody.innerHTML = content;
+            this.lockBodyScroll();
             modal.removeAttribute('hidden');
             
             // Force scroll reset after DOM is updated
@@ -266,6 +275,7 @@ class SignatureCleaner {
             closeButton.addEventListener('click', () => {
                 if (modal) {
                     modal.setAttribute('hidden', '');
+                    this.unlockBodyScroll();
                 }
             });
         }
@@ -274,6 +284,7 @@ class SignatureCleaner {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.setAttribute('hidden', '');
+                    this.unlockBodyScroll();
                 }
             });
         }

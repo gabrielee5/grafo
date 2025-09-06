@@ -830,12 +830,21 @@ class AuthModalManager {
         }
     }
 
+    lockBodyScroll() {
+        document.body.style.overflow = 'hidden';
+    }
+    
+    unlockBodyScroll() {
+        document.body.style.overflow = '';
+    }
+
     showSignInModal() {
         if (!this.signInModal) {
             return;
         }
         
         this.hideAllModals();
+        this.lockBodyScroll();
         this.signInModal.removeAttribute('hidden');
         this.activeModal = 'signIn';
         this.clearForm('signInForm');
@@ -851,6 +860,7 @@ class AuthModalManager {
 
     showSignUpModal() {
         this.hideAllModals();
+        this.lockBodyScroll();
         this.signUpModal.removeAttribute('hidden');
         this.activeModal = 'signUp';
         this.clearForm('signUpForm');
@@ -865,17 +875,20 @@ class AuthModalManager {
     hideSignInModal() {
         this.signInModal.setAttribute('hidden', '');
         if (this.activeModal === 'signIn') this.activeModal = null;
+        this.unlockBodyScroll();
         this.clearForm('signInForm');
     }
 
     hideSignUpModal() {
         this.signUpModal.setAttribute('hidden', '');
         if (this.activeModal === 'signUp') this.activeModal = null;
+        this.unlockBodyScroll();
         this.clearForm('signUpForm');
     }
 
     showAccountSettingsModal() {
         this.hideAllModals();
+        this.lockBodyScroll();
         this.accountSettingsModal.removeAttribute('hidden');
         this.activeModal = 'accountSettings';
         
@@ -892,6 +905,7 @@ class AuthModalManager {
     hideAccountSettingsModal() {
         this.accountSettingsModal.setAttribute('hidden', '');
         if (this.activeModal === 'accountSettings') this.activeModal = null;
+        this.unlockBodyScroll();
         this.clearForm('profileForm');
         this.clearForm('passwordForm');
     }
