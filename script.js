@@ -250,6 +250,11 @@ class SignatureCleaner {
             modalTitle.textContent = title;
             modalBody.innerHTML = content;
             modal.removeAttribute('hidden');
+            
+            // Force scroll reset after DOM is updated
+            setTimeout(() => {
+                modalBody.scrollTop = 0;
+            }, 0);
         }
     }
     
