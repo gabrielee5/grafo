@@ -389,7 +389,7 @@ const PAGES_DATA = {
             
             <p><strong>Partnership:</strong> <a href="mailto:partnership@firmapulita.com">partnership@firmapulita.com</a></p>
             
-            <p><strong>© 2025 Firma Pulita - Made in Italy</strong></p>
+            <p><strong>© 2025 Firma Pulita - Fatto in Italia</strong></p>
         `
     }
 };
