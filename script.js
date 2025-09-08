@@ -181,14 +181,26 @@ class SignatureCleaner {
             closeHistoryButton.addEventListener('click', () => this.hideHistoryPanel());
         }
         
-        // Close user menu when clicking outside
+        // Close user menu and history panel when clicking outside
         document.addEventListener('click', (e) => {
             const userMenu = document.getElementById('userMenu');
             const authButton = document.getElementById('authButton');
+            const historyPanel = document.getElementById('historyPanel');
+            const historyButton = document.getElementById('historyButton');
             
+            // Close user menu when clicking outside
             if (userMenu && authButton && !userMenu.contains(e.target) && !authButton.contains(e.target)) {
                 userMenu.hidden = true;
                 authButton.classList.remove('menu-open');
+            }
+            
+            // Close history panel when clicking outside (but not when clicking the history button)
+            if (historyPanel && !historyPanel.hidden && 
+                !historyPanel.contains(e.target) && 
+                historyButton && !historyButton.contains(e.target)) {
+                if (window.signatureCleaner) {
+                    window.signatureCleaner.hideHistoryPanel();
+                }
             }
         });
     }
