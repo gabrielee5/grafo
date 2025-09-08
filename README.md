@@ -26,6 +26,10 @@ The application is built with a simple but robust architecture. The **frontend**
 
 To run the project, you need Node.js, a Google Gemini API key, and a Firebase project. After cloning the repository, you'll install the backend dependencies and configure a `.env` file with your API and Firebase keys. The backend server runs on `http://localhost:3001`. The frontend can then be served with any simple HTTP server (like Python's `http.server`) and accessed in a web browser.
 
+```bash
+# to deploy (reminder)
+vercel --prod
+```
 ---
 
 ## Usage Guide & API

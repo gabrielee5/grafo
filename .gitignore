@@ -110,3 +110,4 @@ server/.env
 server/node_modules/
 server/logs/
 server/*.log
+.vercel
