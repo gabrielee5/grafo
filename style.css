@@ -1373,6 +1373,10 @@ body {
         padding: 0 15px;
     }
     
+    .footer-section h3 {
+        justify-content: center;
+    }
+    
     .footer {
         margin-top: 40px;
         padding: 30px 0 15px 0;
