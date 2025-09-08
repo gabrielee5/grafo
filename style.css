@@ -356,7 +356,7 @@ body {
 }
 
 .process-button.processing {
-    background: #6366f1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .spinner {
