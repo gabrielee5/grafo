@@ -1263,12 +1263,20 @@ body {
 }
 
 .footer-section h4 {
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    margin-top: 0;
+}
+
+.footer-section h3 {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 15px;
     margin-top: 0;
