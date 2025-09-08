@@ -1381,6 +1381,25 @@ body {
     text-align: left;
 }
 
+.logo-title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-logo {
+    height: 75px;
+    width: auto;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+.title-text {
+    display: flex;
+    flex-direction: column;
+}
+
 .header-auth {
     display: flex;
     align-items: center;
@@ -2293,6 +2312,15 @@ body {
     
     .header-title {
         text-align: center;
+    }
+    
+    .logo-title-container {
+        justify-content: center;
+    }
+    
+    .app-logo {
+        height: 35px;
+        margin-left: 5px;
     }
     
     .history-panel {
