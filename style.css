@@ -330,7 +330,7 @@ body {
     margin-top: 24px;
     width: 100%;
     padding: 16px 24px;
-    background: #3b82f6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -345,8 +345,8 @@ body {
 }
 
 .process-button:hover:not(:disabled) {
-    background: #2563eb;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .process-button:disabled {
