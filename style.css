@@ -2070,6 +2070,16 @@ body {
     color: #991b1b;
 }
 
+.status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status.warning {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
 .request-info {
     margin-bottom: 16px;
 }

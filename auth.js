@@ -576,7 +576,7 @@ class AuthService {
                 statusClass = 'warning';
                 break;
             case 'pending':
-                statusIcon = '⏳';
+                statusIcon = '◐';
                 statusClass = 'pending';
                 break;
             case 'failed':
