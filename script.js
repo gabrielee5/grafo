@@ -10,6 +10,7 @@ class SignatureCleaner {
         // Workflow tracking
         this.workflowSteps = [];
         this.processingUsedFallback = false;
+        this.currentSessionId = null;
         
         // Step mapping for user-friendly names
         this.stepMapping = {
@@ -443,18 +444,22 @@ class SignatureCleaner {
         // Hide previous results when starting new processing
         this.resultsSection.hidden = true;
 
+        // Get Italian user input
+        const italianInput = this.customInstructions.value.trim();
+        
+        if (!italianInput) {
+            this.showStatus('Fornire le istruzioni di elaborazione nell\'area di testo', 'error');
+            this.setProcessingState(false);
+            return;
+        }
+
+        // Create history record at the start
+        this.currentSessionId = await this.createInitialHistory(italianInput);
+
         try {
             // Convert image to base64
             const base64Image = await this.fileToBase64(this.currentImageFile);
             const base64Data = base64Image.split(',')[1]; // Remove data:image/... prefix
-
-            // Get Italian user input
-            const italianInput = this.customInstructions.value.trim();
-            
-            if (!italianInput) {
-                this.showStatus('Fornire le istruzioni di elaborazione nell\'area di testo', 'error');
-                return;
-            }
 
             // Add initial step
             this.addWorkflowStep({
@@ -480,15 +485,20 @@ class SignatureCleaner {
                     this.showStatus('Immagine elaborata con successo!', 'success');
                 }
                 
-                // Save to history
-                await this.saveToHistory(italianInput);
+                // Update history with success
+                await this.updateHistoryWithResult('success', response.imageData);
             } else {
+                // Update history with failure
+                await this.updateHistoryWithResult('failed', null, response.error);
                 throw new Error(response.error || 'Failed to process image');
             }
 
         } catch (error) {
             console.error('Processing error:', error);
             this.showStatus(`Errore nell'elaborazione dell'immagine: ${error.message} `, 'error');
+            
+            // Update history with error
+            await this.updateHistoryWithResult('failed', null, error.message);
         } finally {
             this.setProcessingState(false);
         }
@@ -1241,6 +1251,7 @@ Return only the enhanced prompt, no additional text.`;
         this.workflowSteps = [];
         this.workflowLadder.innerHTML = '';
         this.processingUsedFallback = false;
+        this.currentSessionId = null;
         this.resetProgressBar();
     }
 
@@ -1262,6 +1273,9 @@ Return only the enhanced prompt, no additional text.`;
         // Update progress bar
         this.updateProgressBarFromStep(step);
         
+        // Update history with current steps
+        this.updateHistorySteps();
+        
         return step;
     }
 
@@ -1273,6 +1287,9 @@ Return only the enhanced prompt, no additional text.`;
             
             // Update progress bar
             this.updateProgressBarFromStep(this.workflowSteps[stepIndex]);
+            
+            // Update history with current steps
+            this.updateHistorySteps();
         }
     }
     
@@ -1608,6 +1625,110 @@ Return only the enhanced prompt, no additional text.`;
         } catch (error) {
             console.error('Error saving to history:', error);
             // Don't show error to user - history saving is optional
+        }
+    }
+    
+    async createInitialHistory(instructions) {
+        if (!window.authService) return null;
+        
+        // Generate session ID
+        const sessionId = this.generateSessionId();
+        
+        const historyItem = {
+            sessionId: sessionId,
+            timestamp: new Date().toISOString(),
+            
+            // User view - initial pending state
+            userView: {
+                prompt: instructions,
+                fileName: this.currentImageFile ? this.currentImageFile.name : 'unknown',
+                result: 'pending',
+                processingTime: null,
+                outputFileName: null,
+                userRating: null
+            },
+            
+            // Debug info - initial state
+            steps: [],
+            totalDuration: 0,
+            finalResult: 'pending',
+            usedFallback: false
+        };
+        
+        try {
+            await window.authService.saveToHistory(historyItem);
+            return sessionId;
+        } catch (error) {
+            console.error('Error creating initial history:', error);
+            return sessionId; // Return sessionId anyway for localStorage fallback
+        }
+    }
+    
+    async updateHistoryWithResult(result, imageBlob = null, errorMessage = null) {
+        if (!this.currentSessionId || !window.authService) return;
+        
+        // Extract step data from existing workflowSteps
+        const steps = this.workflowSteps.map(step => ({
+            name: step.title,
+            input: step.prompt || '',
+            output: step.response || (step.status === 'failed' ? 'Error occurred' : 'Completed'),
+            duration: step.endTime && step.startTime ? (step.endTime - step.startTime) : 0,
+            status: step.status
+        }));
+        
+        // Calculate total processing time
+        const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
+        
+        const updates = {
+            userView: {
+                prompt: this.customInstructions.value.trim(),
+                fileName: this.currentImageFile ? this.currentImageFile.name : 'unknown',
+                result: result === 'success' && this.processingUsedFallback ? 'simplified' : result,
+                processingTime: this.formatDuration(totalDuration),
+                outputFileName: imageBlob ? this.generateResultFileName() : null,
+                userRating: null
+            },
+            steps: steps,
+            totalDuration: totalDuration,
+            finalResult: result,
+            usedFallback: this.processingUsedFallback
+        };
+        
+        try {
+            await window.authService.updateHistory(this.currentSessionId, updates);
+        } catch (error) {
+            console.error('Error updating history:', error);
+            // Don't show error to user - history updating is optional
+        }
+    }
+    
+    async updateHistorySteps() {
+        if (!this.currentSessionId || !window.authService) return;
+        
+        // Extract step data from current workflowSteps
+        const steps = this.workflowSteps.map(step => ({
+            name: step.title,
+            input: step.prompt || '',
+            output: step.response || (step.status === 'failed' ? 'Error occurred' : step.status === 'completed' ? 'Completed' : 'In progress...'),
+            duration: step.endTime && step.startTime ? (step.endTime - step.startTime) : 0,
+            status: step.status
+        }));
+        
+        // Calculate total processing time
+        const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
+        
+        const updates = {
+            steps: steps,
+            totalDuration: totalDuration,
+            usedFallback: this.processingUsedFallback,
+            'userView.processingTime': this.formatDuration(totalDuration)
+        };
+        
+        try {
+            await window.authService.updateHistory(this.currentSessionId, updates);
+        } catch (error) {
+            console.error('Error updating history steps:', error);
+            // Don't show error to user - history updating is optional
         }
     }
     

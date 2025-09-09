@@ -235,6 +235,53 @@ class AuthService {
         }
     }
 
+    async updateHistory(sessionId, updates) {
+        if (!this.isLoggedIn() || !this.initialized) {
+            // Update localStorage as fallback
+            this.updateLocalStorageHistory(sessionId, updates);
+            return { success: false, error: 'Utente non autenticato' };
+        }
+
+        if (!this.isEmailVerified()) {
+            // Update localStorage as fallback
+            this.updateLocalStorageHistory(sessionId, updates);
+            return { success: false, error: 'Email non verificata' };
+        }
+
+        try {
+            // Find the document by sessionId and userId
+            const query = await this.firestore
+                .collection('userHistory')
+                .where('sessionId', '==', sessionId)
+                .where('userId', '==', this.currentUser.uid)
+                .get();
+
+            if (query.empty) {
+                console.warn('History record not found for sessionId:', sessionId);
+                // Fallback to localStorage
+                this.updateLocalStorageHistory(sessionId, updates);
+                return { success: false, error: 'Record non trovato' };
+            }
+
+            // Update the document
+            const doc = query.docs[0];
+            await doc.ref.update({
+                ...updates,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp
+            });
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating history:', error);
+            // Fallback to localStorage
+            this.updateLocalStorageHistory(sessionId, updates);
+            return { 
+                success: false, 
+                error: 'Errore nell\'aggiornamento della cronologia' 
+            };
+        }
+    }
+
     async getUserHistory(limit = 50) {
         if (!this.isLoggedIn() || !this.initialized) {
             return this.getLocalStorageHistory();
@@ -302,6 +349,30 @@ class AuthService {
         } catch (error) {
             console.error('Error reading localStorage history:', error);
             return [];
+        }
+    }
+
+    updateLocalStorageHistory(sessionId, updates) {
+        try {
+            const existingHistory = JSON.parse(localStorage.getItem('signatureHistory') || '[]');
+            const itemIndex = existingHistory.findIndex(item => item.sessionId === sessionId);
+            
+            if (itemIndex !== -1) {
+                // Update existing item
+                existingHistory[itemIndex] = {
+                    ...existingHistory[itemIndex],
+                    ...updates,
+                    timestamp: new Date().toISOString() // Update timestamp
+                };
+            } else {
+                // If not found, this shouldn't happen in normal flow, but handle gracefully
+                console.warn('LocalStorage history item not found for sessionId:', sessionId);
+                return;
+            }
+            
+            localStorage.setItem('signatureHistory', JSON.stringify(existingHistory));
+        } catch (error) {
+            console.error('Error updating localStorage history:', error);
         }
     }
 
@@ -492,8 +563,28 @@ class AuthService {
         element.className = 'history-item enhanced';
         
         const date = new Date(item.timestamp?.toDate?.() || item.timestamp);
-        const statusIcon = item.result === 'success' ? '✓' : '✗';
-        const statusClass = item.result === 'success' ? 'success' : 'failed';
+        
+        // Handle different result statuses
+        let statusIcon, statusClass;
+        switch(item.result) {
+            case 'success':
+                statusIcon = '✓';
+                statusClass = 'success';
+                break;
+            case 'simplified':
+                statusIcon = '⚠';
+                statusClass = 'warning';
+                break;
+            case 'pending':
+                statusIcon = '⏳';
+                statusClass = 'pending';
+                break;
+            case 'failed':
+            default:
+                statusIcon = '✗';
+                statusClass = 'failed';
+                break;
+        }
         
         element.innerHTML = `
             <div class="history-header">
@@ -510,7 +601,7 @@ class AuthService {
                     <span> → ${this.escapeHtml(item.fileName)}</span>
                 </div>
                 <div class="processing-time">
-                    <span>Elaborato in ${item.processingTime}</span>
+                    <span>${item.processingTime ? `Elaborato in ${item.processingTime}` : (item.result === 'pending' ? 'In elaborazione...' : 'Tempo non disponibile')}</span>
                     <div class="user-rating" data-session-id="${item.sessionId}">
                         <div class="stars">
                             ${[1,2,3,4,5].map(star => 
