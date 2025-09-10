@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /*.css
+Allow: /*.js
+Allow: /sitemap.xml
+
+# Block access to sensitive files and directories
+Disallow: /server/
+Disallow: /config.js
+Disallow: /auth.js
+Disallow: /utils.js
+Disallow: /script.js
+Disallow: /pages-data.js
+Disallow: /.git/
+Disallow: /.claude/
+Disallow: /vercel.json
+
+# Sitemap location
+Sitemap: https://firma-pulita.com/sitemap.xml
+
+# Crawl delay (be respectful)
+Crawl-delay: 1
